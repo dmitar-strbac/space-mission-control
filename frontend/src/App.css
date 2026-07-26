@@ -1,0 +1,63 @@
+.app-shell {
+  align-items: center;
+  background:
+    radial-gradient(circle at top, rgb(21 47 79 / 45%), transparent 40%),
+    #060e1a;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.status-card {
+  background: rgb(10 24 42 / 85%);
+  border: 1px solid rgb(111 175 255 / 20%);
+  border-radius: 1.25rem;
+  box-shadow: 0 2rem 5rem rgb(0 0 0 / 30%);
+  max-width: 42rem;
+  padding: 3rem;
+  width: 100%;
+}
+
+.status-badge {
+  background: rgb(67 142 255 / 12%);
+  border: 1px solid rgb(67 142 255 / 30%);
+  border-radius: 999px;
+  color: #8cbcff;
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.5rem 0.8rem;
+  text-transform: uppercase;
+}
+
+.status-card h1 {
+  color: #f5f9ff;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.1;
+  margin: 1.5rem 0 1rem;
+}
+
+.status-card p {
+  color: #aebed3;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  margin: 0;
+}
+
+.system-status {
+  align-items: center;
+  color: #d8e5f5;
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 2rem;
+}
+
+.status-indicator {
+  background: #4ade80;
+  border-radius: 50%;
+  box-shadow: 0 0 1rem rgb(74 222 128 / 70%);
+  height: 0.65rem;
+  width: 0.65rem;
+}
