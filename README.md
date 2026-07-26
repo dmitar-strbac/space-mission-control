@@ -146,11 +146,45 @@ space-mission-control/
 
 ---
 
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Clone the repository
+
+```bash
+git clone https://github.com/dmitar-strbac/space-mission-control.git
+cd space-mission-control
+```
+
+### Configure environment
+
+```bash
+cp .env.example .env
+```
+
+On Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### Start the development environment
+
+```bash
+docker compose up --build
+```
+
+---
+
 ## 🗺️ Roadmap
 
 - [x] Project architecture
 - [x] Repository initialization
-- [ ] Infrastructure setup
+- [x] Infrastructure setup
 - [ ] Mission Service
 - [ ] Vehicle Service
 - [ ] Trajectory Service

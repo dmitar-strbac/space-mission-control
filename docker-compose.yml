@@ -1,65 +1,341 @@
 services:
   postgres:
-    image: postgres:16
-    container_name: space-mission-postgres
+    image: postgres:16-alpine
+    container_name: smc-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: space_admin
-      POSTGRES_PASSWORD: space_admin
-      POSTGRES_DB: space_mission_control
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
     healthcheck:
       test:
-        - CMD-SHELL
-        - pg_isready -U space_admin -d space_mission_control
-      interval: 5s
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d postgres",
+        ]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 10s
+    networks:
+      - mission-control-network
 
   mongodb:
-    image: mongo:7
-    container_name: space-mission-mongodb
+    image: mongo:8
+    container_name: smc-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
+      - mongo-data:/data/db
     healthcheck:
       test:
-        - CMD
-        - mongosh
-        - --quiet
-        - --eval
-        - db.adminCommand('ping').ok
-      interval: 5s
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "--eval",
+          "db.adminCommand('ping').ok",
+        ]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 15s
+    networks:
+      - mission-control-network
 
   nats:
-    image: nats:2
-    container_name: space-mission-nats
+    image: nats:2-alpine
+    container_name: smc-nats
+    restart: unless-stopped
     command:
-      - "--jetstream"
-      - "--store_dir=/data"
-      - "--http_port=8222"
+      - "-c"
+      - "/etc/nats/nats-server.conf"
     ports:
       - "4222:4222"
       - "8222:8222"
     volumes:
-      - nats_data:/data
+      - ./infrastructure/nats/nats-server.conf:/etc/nats/nats-server.conf:ro
+      - nats-data:/data/jetstream
     healthcheck:
       test:
-        - CMD
-        - wget
-        - --spider
-        - -q
-        - http://localhost:8222/healthz
-      interval: 5s
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8222/healthz",
+        ]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
+      start_period: 10s
+    networks:
+      - mission-control-network
+
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+    container_name: smc-api-gateway
+    restart: unless-stopped
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+      ]
+    environment:
+      SERVICE_NAME: api-gateway
+      SERVICE_TITLE: API Gateway
+      ENVIRONMENT: ${ENVIRONMENT}
+      LOG_LEVEL: ${LOG_LEVEL}
+      NATS_URL: ${NATS_URL}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services/api-gateway/app:/app/app
+    depends_on:
+      nats:
+        condition: service_healthy
+    networks:
+      - mission-control-network
+
+  mission-service:
+    build:
+      context: ./services/mission-service
+    container_name: smc-mission-service
+    restart: unless-stopped
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8001",
+        "--reload",
+      ]
+    environment:
+      SERVICE_NAME: mission-service
+      SERVICE_TITLE: Mission Service
+      ENVIRONMENT: ${ENVIRONMENT}
+      LOG_LEVEL: ${LOG_LEVEL}
+      NATS_URL: ${NATS_URL}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${MISSION_DATABASE_NAME}
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./services/mission-service/app:/app/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - mission-control-network
+
+  vehicle-service:
+    build:
+      context: ./services/vehicle-service
+    container_name: smc-vehicle-service
+    restart: unless-stopped
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8002",
+        "--reload",
+      ]
+    environment:
+      SERVICE_NAME: vehicle-service
+      SERVICE_TITLE: Vehicle Service
+      ENVIRONMENT: ${ENVIRONMENT}
+      LOG_LEVEL: ${LOG_LEVEL}
+      NATS_URL: ${NATS_URL}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${VEHICLE_DATABASE_NAME}
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./services/vehicle-service/app:/app/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - mission-control-network
+
+  trajectory-service:
+    build:
+      context: ./services/trajectory-service
+    container_name: smc-trajectory-service
+    restart: unless-stopped
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8003",
+        "--reload",
+      ]
+    environment:
+      SERVICE_NAME: trajectory-service
+      SERVICE_TITLE: Trajectory Service
+      ENVIRONMENT: ${ENVIRONMENT}
+      LOG_LEVEL: ${LOG_LEVEL}
+      NATS_URL: ${NATS_URL}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${TRAJECTORY_DATABASE_NAME}
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./services/trajectory-service/app:/app/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - mission-control-network
+
+  flight-dynamics-service:
+    build:
+      context: ./services/flight-dynamics-service
+    container_name: smc-flight-dynamics-service
+    restart: unless-stopped
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8004",
+        "--reload",
+      ]
+    environment:
+      SERVICE_NAME: flight-dynamics-service
+      SERVICE_TITLE: Flight Dynamics Service
+      ENVIRONMENT: ${ENVIRONMENT}
+      LOG_LEVEL: ${LOG_LEVEL}
+      NATS_URL: ${NATS_URL}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${FLIGHT_DYNAMICS_DATABASE_NAME}
+    ports:
+      - "8004:8004"
+    volumes:
+      - ./services/flight-dynamics-service/app:/app/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - mission-control-network
+
+  communication-service:
+    build:
+      context: ./services/communication-service
+    container_name: smc-communication-service
+    restart: unless-stopped
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8005",
+        "--reload",
+      ]
+    environment:
+      SERVICE_NAME: communication-service
+      SERVICE_TITLE: Communication Service
+      ENVIRONMENT: ${ENVIRONMENT}
+      LOG_LEVEL: ${LOG_LEVEL}
+      NATS_URL: ${NATS_URL}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${COMMUNICATION_DATABASE_NAME}
+    ports:
+      - "8005:8005"
+    volumes:
+      - ./services/communication-service/app:/app/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - mission-control-network
+
+  telemetry-safety-service:
+    build:
+      context: ./services/telemetry-safety-service
+    container_name: smc-telemetry-safety-service
+    restart: unless-stopped
+    command:
+      [
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8006",
+        "--reload",
+      ]
+    environment:
+      SERVICE_NAME: telemetry-safety-service
+      SERVICE_TITLE: Telemetry & Safety Service
+      ENVIRONMENT: ${ENVIRONMENT}
+      LOG_LEVEL: ${LOG_LEVEL}
+      NATS_URL: ${NATS_URL}
+      DATABASE_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/${TELEMETRY_DATABASE_NAME}?authSource=admin
+    ports:
+      - "8006:8006"
+    volumes:
+      - ./services/telemetry-safety-service/app:/app/app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - mission-control-network
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: smc-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - mission-control-network
+
+networks:
+  mission-control-network:
+    name: mission-control-network
+    driver: bridge
 
 volumes:
-  postgres_data:
-  mongodb_data:
-  nats_data:
+  postgres-data:
+  mongo-data:
+  nats-data:

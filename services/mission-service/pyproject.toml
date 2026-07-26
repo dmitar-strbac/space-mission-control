@@ -1,0 +1,27 @@
+[project]
+name = "mission-service"
+version = "0.1.0"
+description = "Mission lifecycle and orchestration service."
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi",
+    "pydantic-settings",
+    "uvicorn[standard]",
+]
+
+[dependency-groups]
+dev = [
+    "httpx",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "ruff",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
