@@ -17,6 +17,11 @@ dev = [
 [tool.uv]
 package = false
 
+[tool.uv.workspace]
+members = [
+    "packages/orbital-mechanics",
+]
+
 [tool.ruff]
 target-version = "py313"
 line-length = 100
@@ -40,7 +45,10 @@ select = [
 ignore = []
 
 [tool.ruff.lint.isort]
-known-first-party = ["app"]
+known-first-party = [
+    "app",
+    "orbital_mechanics",
+]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -56,10 +64,13 @@ exclude = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["services"]
+testpaths = [
+    "packages",
+]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = [
+    "--import-mode=importlib",
     "--strict-markers",
     "--disable-warnings",
     "-ra",

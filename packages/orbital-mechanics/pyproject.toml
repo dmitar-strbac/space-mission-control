@@ -1,0 +1,22 @@
+[project]
+name = "space-mission-orbital-mechanics"
+version = "0.1.0"
+description = "Reusable orbital mechanics library for the Space Mission Control platform."
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "ruff",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["orbital_mechanics*"]

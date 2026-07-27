@@ -141,7 +141,8 @@ space-mission-control/
 ├── contracts/
 ├── infrastructure/
 ├── docs/
-└── scripts/
+├── scripts/
+└── packages/
 ```
 
 ---
