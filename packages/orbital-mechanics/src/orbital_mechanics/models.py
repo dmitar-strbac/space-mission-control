@@ -106,3 +106,36 @@ class StateVector:
     @property
     def speed_m_s(self) -> float:
         return self.velocity.magnitude
+
+
+@dataclass(frozen=True, slots=True)
+class EngineParameters:
+    thrust_n: float
+    specific_impulse_s: float
+
+    def __post_init__(self) -> None:
+        if not isfinite(self.thrust_n) or self.thrust_n <= 0.0:
+            raise ValueError("Engine thrust must be a positive finite number.")
+
+        if not isfinite(self.specific_impulse_s) or self.specific_impulse_s <= 0.0:
+            raise ValueError("Engine specific impulse must be a positive finite number.")
+
+
+@dataclass(frozen=True, slots=True)
+class ThrustCommand:
+    direction: Vector2D
+    throttle: float = 1.0
+
+    def __post_init__(self) -> None:
+        if not isfinite(self.throttle):
+            raise ValueError("Throttle must be a finite number.")
+
+        if not 0.0 <= self.throttle <= 1.0:
+            raise ValueError("Throttle must be between zero and one.")
+
+        if self.direction.magnitude == 0.0:
+            raise ValueError("Thrust direction cannot be a zero vector.")
+
+    @property
+    def normalized_direction(self) -> Vector2D:
+        return self.direction.normalized()

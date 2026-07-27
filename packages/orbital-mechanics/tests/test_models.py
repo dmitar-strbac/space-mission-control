@@ -1,6 +1,11 @@
 import pytest
 
-from orbital_mechanics.models import StateVector, Vector2D
+from orbital_mechanics.models import (
+    EngineParameters,
+    StateVector,
+    ThrustCommand,
+    Vector2D,
+)
 
 
 def test_vector_magnitude_uses_euclidean_distance() -> None:
@@ -68,4 +73,54 @@ def test_state_vector_rejects_invalid_physical_values(
             total_mass_kg=total_mass_kg,
             propellant_mass_kg=propellant_mass_kg,
             elapsed_time_s=elapsed_time_s,
+        )
+
+
+def test_engine_parameters_require_positive_values() -> None:
+    with pytest.raises(ValueError, match="thrust"):
+        EngineParameters(
+            thrust_n=0.0,
+            specific_impulse_s=300.0,
+        )
+
+    with pytest.raises(ValueError, match="specific impulse"):
+        EngineParameters(
+            thrust_n=100_000.0,
+            specific_impulse_s=0.0,
+        )
+
+
+def test_thrust_command_normalizes_direction() -> None:
+    command = ThrustCommand(
+        direction=Vector2D(x=3.0, y=4.0),
+        throttle=0.5,
+    )
+
+    assert command.normalized_direction.x == pytest.approx(0.6)
+    assert command.normalized_direction.y == pytest.approx(0.8)
+
+
+@pytest.mark.parametrize(
+    "throttle",
+    [
+        -0.1,
+        1.1,
+        float("inf"),
+        float("nan"),
+    ],
+)
+def test_thrust_command_rejects_invalid_throttle(
+    throttle: float,
+) -> None:
+    with pytest.raises(ValueError, match="Throttle"):
+        ThrustCommand(
+            direction=Vector2D(x=1.0, y=0.0),
+            throttle=throttle,
+        )
+
+
+def test_thrust_command_rejects_zero_direction() -> None:
+    with pytest.raises(ValueError, match="zero vector"):
+        ThrustCommand(
+            direction=Vector2D(x=0.0, y=0.0),
         )
