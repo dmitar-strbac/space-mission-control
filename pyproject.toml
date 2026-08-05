@@ -20,6 +20,7 @@ package = false
 [tool.uv.workspace]
 members = [
     "packages/orbital-mechanics",
+    "services/mission-service",
 ]
 
 [tool.ruff]
@@ -66,6 +67,7 @@ exclude = [
 [tool.pytest.ini_options]
 testpaths = [
     "packages",
+    "services",
 ]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]

@@ -15,13 +15,25 @@
 
 ## 🌌 Overview
 
-**Space Mission Control** is a distributed microservice platform for planning, preparing, and simulating orbital space missions in the Earth–Moon system.
-
-Unlike traditional educational projects that simulate missions through simple status changes, this platform models real engineering concepts such as orbital mechanics, spacecraft resources, communication latency, trajectory planning, and distributed mission orchestration.
+The platform combines orbital mechanics, spacecraft resource management,
+trajectory planning, distributed workflows and real-time telemetry into a
+physically consistent simulation built around modern backend architecture.
 
 The project is designed around a **physically consistent simulation model**, where every maneuver influences the spacecraft state according to simplified orbital physics rather than scripted behavior.
 
 Originally developed as a **Bachelor's Thesis** at the **Faculty of Technical Sciences, University of Novi Sad**, the project is also intended to serve as a long-term portfolio project demonstrating modern backend architecture and distributed systems design.
+
+---
+
+## 🎯 Why this project
+
+The goal of this project is not to reproduce a complete aerospace engineering simulator.
+
+Instead, it explores how modern distributed backend systems can be combined with a simplified but physically consistent orbital simulation to model complex mission planning and execution workflows.
+
+The project emphasizes software architecture, clear service boundaries, event-driven communication, distributed transactions and deterministic simulation rather than graphical realism or aerospace-level engineering accuracy.
+
+By combining concepts from orbital mechanics with modern microservice architecture, the project demonstrates how engineering principles and distributed software systems can be integrated into a cohesive simulation platform.
 
 ---
 
@@ -86,6 +98,13 @@ The platform is organized as a distributed microservice system.
 
 - PostgreSQL
 - MongoDB
+
+### 🧪 Testing
+
+- pytest
+- mypy
+- ruff
+- pre-commit
 
 ### 🧮 Scientific Computing
 
@@ -183,10 +202,14 @@ docker compose up --build
 
 ## 🗺️ Roadmap
 
+The project is currently in the **Core Mission Simulation** milestone, focusing on implementing the foundational backend services required for Low Earth Orbit (LEO) mission planning and simulation.
+
+The roadmap below outlines the planned implementation order and overall project progression.
+
 - [x] Project architecture
 - [x] Repository initialization
 - [x] Infrastructure setup
-- [ ] Mission Service
+- [x] Mission Service
 - [ ] Vehicle Service
 - [ ] Trajectory Service
 - [ ] Flight Dynamics Service
@@ -218,21 +241,6 @@ The platform is planned to support:
 - Distributed Saga transactions
 - Fault injection scenarios
 - Emergency Abort procedures
-
----
-
-## 🚧 Development Status
-
-The project is currently under active development.
-
-The first milestone focuses on delivering a complete Low Earth Orbit simulation together with the core distributed microservice architecture.
-
-Future milestones will introduce:
-
-- LEO rendezvous missions
-- Three-dimensional orbital mechanics
-- Automatic trajectory replanning
-- Lunar mission support
 
 ---
 
