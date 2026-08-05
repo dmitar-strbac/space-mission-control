@@ -1,25 +1,42 @@
 # 🚀 Mission Service
 
-The Mission Service manages the lifecycle of space missions and coordinates mission preparation across distributed services.
+The Mission Service is responsible for mission definitions, lifecycle management and maintaining the append-only mission timeline.
 
 ## Responsibilities
 
-- Mission lifecycle management
-- Mission status transitions
-- Preparation Saga orchestration
-- Mission timeline management
+- Create and manage mission definitions
+- Control mission lifecycle transitions
+- Maintain the append-only mission timeline
+- Persist mission data using PostgreSQL and SQLAlchemy
+- Manage database schema through Alembic migrations
+- Provide unit and integration test coverage
 
-## Technology
+> **Note:** Prepare Mission Saga orchestration and NATS event publishing are implemented separately as part of the dedicated `prepare-mission-saga` feature.
 
-- Python
-- FastAPI
-- PostgreSQL
-- NATS
+## API
 
-## Default Port
+| Method | Route                     | Purpose                            |
+| ------ | ------------------------- | ---------------------------------- |
+| POST   | `/missions`               | Create a draft mission             |
+| GET    | `/missions`               | List missions                      |
+| GET    | `/missions/{id}`          | Get a mission                      |
+| POST   | `/missions/{id}/prepare`  | Begin preparation                  |
+| POST   | `/missions/{id}/launch`   | Launch a ready mission             |
+| POST   | `/missions/{id}/abort`    | Request abort of an active mission |
+| GET    | `/missions/{id}/timeline` | Read mission events                |
 
-8001
+## Database migration
 
-## Database
+```bash
+alembic upgrade head
+```
 
-PostgreSQL
+## Tests
+
+```bash
+pytest
+```
+
+## Default port
+
+`8001`
