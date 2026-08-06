@@ -21,6 +21,7 @@ package = false
 members = [
     "packages/orbital-mechanics",
     "services/mission-service",
+    "services/vehicle-service",
 ]
 
 [tool.ruff]
