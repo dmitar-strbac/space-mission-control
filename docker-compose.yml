@@ -135,6 +135,7 @@ services:
       - "8001:8001"
     volumes:
       - ./services/mission-service/app:/app/app
+      - ./services/mission-service/migrations:/app/migrations
     depends_on:
       postgres:
         condition: service_healthy
@@ -145,18 +146,15 @@ services:
 
   vehicle-service:
     build:
-      context: ./services/vehicle-service
+      context: .
+      dockerfile: services/vehicle-service/Dockerfile
     container_name: smc-vehicle-service
     restart: unless-stopped
     command:
       [
-        "uvicorn",
-        "app.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8002",
-        "--reload",
+      "sh",
+      "-c",
+      "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload",
       ]
     environment:
       SERVICE_NAME: vehicle-service
@@ -169,6 +167,7 @@ services:
       - "8002:8002"
     volumes:
       - ./services/vehicle-service/app:/app/app
+      - ./services/vehicle-service/migrations:/app/migrations
     depends_on:
       postgres:
         condition: service_healthy

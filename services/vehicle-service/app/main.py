@@ -4,8 +4,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.errors import register_exception_handlers
 from app.api.routes.health import router as health_router
+from app.api.routes.spacecraft import router as spacecraft_router
 from app.core.config import get_settings
+from app.core.database import engine
 from app.core.logging import configure_logging
 
 settings = get_settings()
@@ -20,17 +23,20 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
     yield
 
+    await engine.dispose()
     logger.info("Stopping %s", settings.service_name)
 
 
 app = FastAPI(
     title=settings.service_title,
-    description="Part of the Space Mission Control platform.",
+    description="Spacecraft configuration and resource validation service.",
     version=settings.service_version,
     lifespan=lifespan,
 )
 
+register_exception_handlers(app)
 app.include_router(health_router)
+app.include_router(spacecraft_router)
 
 
 @app.get("/", tags=["Root"])

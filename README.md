@@ -210,7 +210,7 @@ The roadmap below outlines the planned implementation order and overall project 
 - [x] Repository initialization
 - [x] Infrastructure setup
 - [x] Mission Service
-- [ ] Vehicle Service
+- [x] Vehicle Service
 - [ ] Trajectory Service
 - [ ] Flight Dynamics Service
 - [ ] Telemetry & Safety Service

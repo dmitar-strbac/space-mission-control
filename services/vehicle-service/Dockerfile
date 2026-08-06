@@ -6,10 +6,16 @@ ENV PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
 
-COPY pyproject.toml ./
-COPY app ./app
+COPY packages/orbital-mechanics /tmp/orbital-mechanics
 
 RUN pip install --upgrade pip \
-    && pip install .
+    && pip install /tmp/orbital-mechanics
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY services/vehicle-service/pyproject.toml ./
+COPY services/vehicle-service/alembic.ini ./
+COPY services/vehicle-service/migrations ./migrations
+COPY services/vehicle-service/app ./app
+
+RUN pip install .
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002"]

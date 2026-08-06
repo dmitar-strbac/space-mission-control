@@ -20,3 +20,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["orbital_mechanics*"]
+
+[tool.setuptools.package-data]
+orbital_mechanics = ["py.typed"]
