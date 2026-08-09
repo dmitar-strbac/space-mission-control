@@ -22,6 +22,8 @@ members = [
     "packages/orbital-mechanics",
     "services/mission-service",
     "services/vehicle-service",
+    "services/trajectory-service",
+    "services/flight-dynamics-service",
 ]
 
 [tool.ruff]

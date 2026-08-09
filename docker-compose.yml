@@ -210,18 +210,15 @@ services:
 
   flight-dynamics-service:
     build:
-      context: ./services/flight-dynamics-service
+      context: .
+      dockerfile: services/flight-dynamics-service/Dockerfile
     container_name: smc-flight-dynamics-service
     restart: unless-stopped
     command:
       [
-        "uvicorn",
-        "app.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8004",
-        "--reload",
+        "sh",
+        "-c",
+        "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload",
       ]
     environment:
       SERVICE_NAME: flight-dynamics-service
@@ -234,6 +231,7 @@ services:
       - "8004:8004"
     volumes:
       - ./services/flight-dynamics-service/app:/app/app
+      - ./services/flight-dynamics-service/migrations:/app/migrations
     depends_on:
       postgres:
         condition: service_healthy

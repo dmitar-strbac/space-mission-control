@@ -212,7 +212,7 @@ The roadmap below outlines the planned implementation order and overall project 
 - [x] Mission Service
 - [x] Vehicle Service
 - [x] Trajectory Service
-- [ ] Flight Dynamics Service
+- [x] Flight Dynamics Service
 - [ ] Telemetry & Safety Service
 - [ ] Communication Service
 - [ ] API Gateway
