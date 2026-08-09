@@ -1,4 +1,4 @@
-from math import isfinite, log
+from math import exp, isfinite, log
 
 from orbital_mechanics.constants import STANDARD_GRAVITY_M_S2
 from orbital_mechanics.models import EngineParameters, ThrustCommand, Vector2D
@@ -72,6 +72,29 @@ def thrust_acceleration_m_s2(
     acceleration_m_s2 = effective_thrust_n / total_mass_kg
 
     return command.normalized_direction * acceleration_m_s2
+
+
+def required_propellant_mass_kg(
+    total_mass_kg: float,
+    required_delta_v_m_s: float,
+    specific_impulse_s: float,
+) -> float:
+    if not isfinite(total_mass_kg) or total_mass_kg <= 0.0:
+        raise ValueError("Total spacecraft mass must be a positive finite number.")
+
+    if not isfinite(required_delta_v_m_s) or required_delta_v_m_s < 0.0:
+        raise ValueError("Required delta-v must be a non-negative finite number.")
+
+    if not isfinite(specific_impulse_s) or specific_impulse_s <= 0.0:
+        raise ValueError("Specific impulse must be a positive finite number.")
+
+    if required_delta_v_m_s == 0.0:
+        return 0.0
+
+    exhaust_velocity_m_s = specific_impulse_s * STANDARD_GRAVITY_M_S2
+    final_mass_kg = total_mass_kg / exp(required_delta_v_m_s / exhaust_velocity_m_s)
+
+    return total_mass_kg - final_mass_kg
 
 
 def _validate_mass_values(

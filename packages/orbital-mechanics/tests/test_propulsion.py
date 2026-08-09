@@ -10,6 +10,7 @@ from orbital_mechanics.propulsion import (
     available_delta_v_m_s,
     mass_flow_rate_kg_s,
     propellant_consumed_kg,
+    required_propellant_mass_kg,
     thrust_acceleration_m_s2,
 )
 
@@ -116,3 +117,41 @@ def test_mass_flow_rejects_invalid_throttle(throttle: float) -> None:
 
     with pytest.raises(ValueError, match="Throttle"):
         mass_flow_rate_kg_s(engine=engine, throttle=throttle)
+
+
+def test_required_propellant_is_zero_for_zero_delta_v() -> None:
+    result = required_propellant_mass_kg(
+        total_mass_kg=10_000.0,
+        required_delta_v_m_s=0.0,
+        specific_impulse_s=450.0,
+    )
+
+    assert result == 0.0
+
+
+def test_required_propellant_increases_with_delta_v() -> None:
+    low_delta_v = required_propellant_mass_kg(
+        total_mass_kg=10_000.0,
+        required_delta_v_m_s=100.0,
+        specific_impulse_s=450.0,
+    )
+
+    high_delta_v = required_propellant_mass_kg(
+        total_mass_kg=10_000.0,
+        required_delta_v_m_s=500.0,
+        specific_impulse_s=450.0,
+    )
+
+    assert high_delta_v > low_delta_v > 0.0
+
+
+def test_required_propellant_rejects_negative_delta_v() -> None:
+    with pytest.raises(
+        ValueError,
+        match="Required delta-v",
+    ):
+        required_propellant_mass_kg(
+            total_mass_kg=10_000.0,
+            required_delta_v_m_s=-1.0,
+            specific_impulse_s=450.0,
+        )

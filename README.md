@@ -211,7 +211,7 @@ The roadmap below outlines the planned implementation order and overall project 
 - [x] Infrastructure setup
 - [x] Mission Service
 - [x] Vehicle Service
-- [ ] Trajectory Service
+- [x] Trajectory Service
 - [ ] Flight Dynamics Service
 - [ ] Telemetry & Safety Service
 - [ ] Communication Service
