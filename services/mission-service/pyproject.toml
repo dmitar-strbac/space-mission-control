@@ -1,21 +1,26 @@
 [project]
 name = "mission-service"
-version = "0.1.0"
-description = "Mission lifecycle and orchestration service."
+version = "0.2.0"
+description = "Mission lifecycle and timeline service."
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi",
-    "pydantic-settings",
-    "uvicorn[standard]",
+    "alembic>=1.14",
+    "asyncpg>=0.30",
+    "fastapi>=0.115",
+    "pydantic-settings>=2.7",
+    "sqlalchemy[asyncio]>=2.0",
+    "uvicorn[standard]>=0.34",
 ]
 
 [dependency-groups]
 dev = [
-    "httpx",
-    "mypy",
-    "pytest",
-    "pytest-cov",
-    "ruff",
+    "aiosqlite>=0.21",
+    "httpx>=0.28",
+    "mypy>=1.14",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
+    "pytest-cov>=6.0",
+    "ruff>=0.9",
 ]
 
 [build-system]
@@ -25,3 +30,10 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = ["--strict-markers", "-ra"]

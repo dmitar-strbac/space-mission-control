@@ -120,13 +120,9 @@ services:
     restart: unless-stopped
     command:
       [
-        "uvicorn",
-        "app.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8001",
-        "--reload",
+        "sh",
+        "-c",
+        "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload",
       ]
     environment:
       SERVICE_NAME: mission-service
@@ -139,6 +135,7 @@ services:
       - "8001:8001"
     volumes:
       - ./services/mission-service/app:/app/app
+      - ./services/mission-service/migrations:/app/migrations
     depends_on:
       postgres:
         condition: service_healthy
@@ -149,18 +146,15 @@ services:
 
   vehicle-service:
     build:
-      context: ./services/vehicle-service
+      context: .
+      dockerfile: services/vehicle-service/Dockerfile
     container_name: smc-vehicle-service
     restart: unless-stopped
     command:
       [
-        "uvicorn",
-        "app.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8002",
-        "--reload",
+      "sh",
+      "-c",
+      "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8002 --reload",
       ]
     environment:
       SERVICE_NAME: vehicle-service
@@ -173,6 +167,7 @@ services:
       - "8002:8002"
     volumes:
       - ./services/vehicle-service/app:/app/app
+      - ./services/vehicle-service/migrations:/app/migrations
     depends_on:
       postgres:
         condition: service_healthy
@@ -183,18 +178,15 @@ services:
 
   trajectory-service:
     build:
-      context: ./services/trajectory-service
+      context: .
+      dockerfile: services/trajectory-service/Dockerfile
     container_name: smc-trajectory-service
     restart: unless-stopped
     command:
       [
-        "uvicorn",
-        "app.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8003",
-        "--reload",
+        "sh",
+        "-c",
+        "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload",
       ]
     environment:
       SERVICE_NAME: trajectory-service
@@ -207,6 +199,7 @@ services:
       - "8003:8003"
     volumes:
       - ./services/trajectory-service/app:/app/app
+      - ./services/trajectory-service/migrations:/app/migrations
     depends_on:
       postgres:
         condition: service_healthy
@@ -217,18 +210,15 @@ services:
 
   flight-dynamics-service:
     build:
-      context: ./services/flight-dynamics-service
+      context: .
+      dockerfile: services/flight-dynamics-service/Dockerfile
     container_name: smc-flight-dynamics-service
     restart: unless-stopped
     command:
       [
-        "uvicorn",
-        "app.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8004",
-        "--reload",
+        "sh",
+        "-c",
+        "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload",
       ]
     environment:
       SERVICE_NAME: flight-dynamics-service
@@ -241,6 +231,7 @@ services:
       - "8004:8004"
     volumes:
       - ./services/flight-dynamics-service/app:/app/app
+      - ./services/flight-dynamics-service/migrations:/app/migrations
     depends_on:
       postgres:
         condition: service_healthy
