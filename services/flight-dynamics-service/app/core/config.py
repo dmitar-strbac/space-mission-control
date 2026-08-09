@@ -1,17 +1,22 @@
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     service_name: str = "flight-dynamics-service"
     service_title: str = "Flight Dynamics Service"
-    service_version: str = "0.1.0"
+    service_version: str = "0.2.0"
     environment: str = "development"
     log_level: str = "INFO"
 
     nats_url: str = "nats://nats:4222"
-    database_url: str | None = None
+
+    database_url: str = Field(
+        default=("postgresql+asyncpg://smc:smc@postgres:5432/flight_dynamics_service")
+    )
+    database_echo: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

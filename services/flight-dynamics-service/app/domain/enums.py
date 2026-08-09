@@ -1,0 +1,32 @@
+from enum import StrEnum
+
+
+class SimulationStatus(StrEnum):
+    INITIALIZED = "INITIALIZED"
+    RUNNING = "RUNNING"
+    PAUSED = "PAUSED"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class CheckpointReason(StrEnum):
+    INITIALIZED = "INITIALIZED"
+    PERIODIC = "PERIODIC"
+    PAUSED = "PAUSED"
+    MANEUVER_COMPLETED = "MANEUVER_COMPLETED"
+    COMPLETED = "COMPLETED"
+
+
+class ManeuverExecutionStatus(StrEnum):
+    PENDING = "PENDING"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+
+class ManeuverType(StrEnum):
+    ORBIT_INSERTION = "ORBIT_INSERTION"
+    ORBIT_RAISE = "ORBIT_RAISE"
+    ORBIT_LOWER = "ORBIT_LOWER"
+    MIDCOURSE_CORRECTION = "MIDCOURSE_CORRECTION"
+    DEORBIT_BURN = "DEORBIT_BURN"
