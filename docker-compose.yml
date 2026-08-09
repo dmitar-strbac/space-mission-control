@@ -178,18 +178,15 @@ services:
 
   trajectory-service:
     build:
-      context: ./services/trajectory-service
+      context: .
+      dockerfile: services/trajectory-service/Dockerfile
     container_name: smc-trajectory-service
     restart: unless-stopped
     command:
       [
-        "uvicorn",
-        "app.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8003",
-        "--reload",
+        "sh",
+        "-c",
+        "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload",
       ]
     environment:
       SERVICE_NAME: trajectory-service
@@ -202,6 +199,7 @@ services:
       - "8003:8003"
     volumes:
       - ./services/trajectory-service/app:/app/app
+      - ./services/trajectory-service/migrations:/app/migrations
     depends_on:
       postgres:
         condition: service_healthy
