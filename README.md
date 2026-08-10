@@ -214,7 +214,7 @@ The roadmap below outlines the planned implementation order and overall project 
 - [x] Trajectory Service
 - [x] Flight Dynamics Service
 - [ ] Telemetry & Safety Service
-- [ ] Communication Service
+- [x] Communication Service
 - [ ] API Gateway
 - [ ] React frontend
 - [ ] Prepare Mission Saga

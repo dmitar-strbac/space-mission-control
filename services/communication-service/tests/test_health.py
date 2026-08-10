@@ -12,7 +12,7 @@ def test_health_endpoint_returns_service_status() -> None:
     assert response.json() == {
         "status": "healthy",
         "service": "communication-service",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "environment": "development",
     }
 
@@ -21,8 +21,9 @@ def test_root_endpoint_returns_service_information() -> None:
     response = client.get("/")
 
     assert response.status_code == 200
+
     assert response.json() == {
         "service": "communication-service",
-        "message": "Communication Service is running.",
+        "message": ("Communication Service is running."),
         "documentation": "/docs",
     }

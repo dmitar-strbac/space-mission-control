@@ -49,7 +49,7 @@ Every command or integration event should be wrapped in the shared event envelop
 | ---------------- | ---------------------------------------------------------------------- |
 | `event_id`       | Unique identifier of the event instance                                |
 | `event_type`     | Domain-oriented event name (e.g. `mission.created`)                    |
-| `event_version`  | Schema version of this event type                                      |
+| `schema_version` | Schema version of this event type                                      |
 | `occurred_at`    | Timestamp when the event was produced                                  |
 | `source`         | Originating service                                                    |
 | `correlation_id` | Identifier linking events belonging to the same workflow (e.g. a Saga) |
