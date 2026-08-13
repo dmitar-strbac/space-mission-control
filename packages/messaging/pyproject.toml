@@ -1,0 +1,17 @@
+[project]
+name = "space-mission-messaging"
+version = "0.1.0"
+description = "Shared messaging primitives for Space Mission Control services."
+requires-python = ">=3.13"
+dependencies = [
+    "nats-py>=2.11",
+    "pydantic>=2.10",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["smc_messaging*"]

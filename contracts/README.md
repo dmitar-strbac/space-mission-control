@@ -27,6 +27,7 @@ contracts/
 ├── events/
 │   └── event-envelope.schema.json
 ├── schemas/
+    └── saga/
 └── README.md
 ```
 

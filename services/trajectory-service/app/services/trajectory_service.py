@@ -105,6 +105,26 @@ class TrajectoryService:
         trajectory_plan = await self.get(mission_id)
         return list(trajectory_plan.maneuvers)
 
+    async def cancel(
+        self,
+        mission_id: UUID,
+    ) -> TrajectoryPlan | None:
+        trajectory = await self._repository.get_by_mission_id(mission_id)
+
+        if trajectory is None:
+            return None
+
+        if trajectory.status is not TrajectoryStatus.SUPERSEDED:
+            trajectory.status = TrajectoryStatus.SUPERSEDED
+
+            for maneuver in trajectory.maneuvers:
+                maneuver.status = ManeuverStatus.CANCELLED
+
+            await self._session.commit()
+            await self._session.refresh(trajectory)
+
+        return trajectory
+
 
 def _serialize_state_vector(
     state: StateVector,

@@ -16,8 +16,14 @@ class SpacecraftRepository:
     async def get_by_id(
         self,
         spacecraft_id: UUID,
+        *,
+        for_update: bool = False,
     ) -> Spacecraft | None:
         statement = select(Spacecraft).where(Spacecraft.id == spacecraft_id)
+
+        if for_update:
+            statement = statement.with_for_update()
+
         result = await self._session.execute(statement)
 
         return result.scalar_one_or_none()

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vehicle-reserved.schema.json",
+  "title": "Vehicle Reserved",
+  "type": "object",
+  "required": [
+    "saga_id",
+    "mission_id",
+    "vehicle_id"
+  ],
+  "properties": {
+    "saga_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "vehicle_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "vehicle": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

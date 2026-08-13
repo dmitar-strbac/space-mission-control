@@ -12,6 +12,7 @@ from app.models.base import Base
 
 if TYPE_CHECKING:
     from app.models.mission_event import MissionEvent
+    from app.models.saga_step import SagaStep
 
 json_type = JSON().with_variant(JSONB(), "postgresql")
 
@@ -58,4 +59,10 @@ class Mission(Base):
         back_populates="mission",
         cascade="all, delete-orphan",
         order_by="MissionEvent.occurred_at",
+    )
+
+    saga_steps: Mapped[list["SagaStep"]] = relationship(
+        back_populates="mission",
+        cascade="all, delete-orphan",
+        order_by="SagaStep.created_at",
     )

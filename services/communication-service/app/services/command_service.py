@@ -21,9 +21,7 @@ from app.domain.exceptions import (
 from app.models.command import Command
 from app.models.command_log import CommandLog
 from app.repositories.command_repository import CommandRepository
-from app.repositories.communication_profile_repository import (
-    CommunicationProfileRepository,
-)
+from app.repositories.communication_profile_repository import CommunicationProfileRepository
 from app.schemas.command import CommandCreateRequest
 
 
