@@ -60,3 +60,9 @@ class SimulationRepository:
         )
 
         return result.all()
+
+    async def delete_session(
+        self,
+        simulation: SimulationSession,
+    ) -> None:
+        await self._session.delete(simulation)

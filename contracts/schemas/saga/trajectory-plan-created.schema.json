@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "trajectory-plan-created.schema.json",
+  "title": "Trajectory Plan Created",
+  "type": "object",
+  "required": [
+    "saga_id",
+    "mission_id",
+    "trajectory_plan_id"
+  ],
+  "properties": {
+    "saga_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "trajectory_plan_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "trajectory": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

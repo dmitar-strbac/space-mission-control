@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "resources-validation-requested.schema.json",
+  "title": "Resources Validation Requested",
+  "type": "object",
+  "required": [
+    "saga_id",
+    "mission_id",
+    "vehicle_id",
+    "trajectory_plan_id"
+  ],
+  "properties": {
+    "saga_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "vehicle_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "trajectory_plan_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "trajectory": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

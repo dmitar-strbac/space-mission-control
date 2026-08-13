@@ -56,7 +56,7 @@ Application screenshots, architecture diagrams and demonstration GIFs will be ad
 - 📐 Numerical orbit propagation
 - 🧮 Delta-v and propellant calculations
 - ⚖️ Database-per-service architecture
-- 🔥 Distributed Saga orchestration
+- 🔥 Distributed mission preparation using Saga orchestration
 - 🐳 Fully containerized development environment
 
 ---
@@ -162,6 +162,8 @@ space-mission-control/
 ├── docs/
 ├── scripts/
 └── packages/
+    ├── orbital-mechanics/
+    └── messaging/
 ```
 
 ---
@@ -202,9 +204,9 @@ docker compose up --build
 
 ## 🗺️ Roadmap
 
-The project is currently in the **Core Mission Simulation** milestone, focusing on implementing the foundational backend services required for Low Earth Orbit (LEO) mission planning and simulation.
+The project has completed the **Core Mission Simulation** and **Mission Preparation Saga** milestones, establishing the main backend services and distributed workflow required for Low Earth Orbit (LEO) mission preparation and simulation.
 
-The roadmap below outlines the planned implementation order and overall project progression.
+The roadmap below outlines the remaining implementation order and overall project progression.
 
 - [x] Project architecture
 - [x] Repository initialization
@@ -214,10 +216,10 @@ The roadmap below outlines the planned implementation order and overall project 
 - [x] Trajectory Service
 - [x] Flight Dynamics Service
 - [ ] Telemetry & Safety Service
-- [ ] Communication Service
+- [x] Communication Service
 - [ ] API Gateway
 - [ ] React frontend
-- [ ] Prepare Mission Saga
+- [x] Prepare Mission Saga
 - [ ] Real-time telemetry
 - [ ] Emergency Abort workflow
 - [ ] Docker deployment

@@ -20,10 +20,12 @@ package = false
 [tool.uv.workspace]
 members = [
     "packages/orbital-mechanics",
+    "packages/messaging",
     "services/mission-service",
     "services/vehicle-service",
     "services/trajectory-service",
     "services/flight-dynamics-service",
+    "services/communication-service",
 ]
 
 [tool.ruff]
@@ -63,6 +65,9 @@ line-ending = "auto"
 python_version = "3.13"
 strict = true
 warn_unused_configs = true
+mypy_path = [
+    "packages/messaging",
+]
 exclude = [
     "frontend/",
 ]

@@ -3,13 +3,21 @@ FROM python:3.13-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PIP_NO_CACHE_DIR=1
+ENV MESSAGING_ENABLED="true"
 
 WORKDIR /app
 
-COPY pyproject.toml ./
-COPY app ./app
+COPY packages/messaging /tmp/messaging
+
+COPY services/communication-service/pyproject.toml ./
+COPY services/communication-service/alembic.ini ./
+COPY services/communication-service/migrations ./migrations
+COPY services/communication-service/app ./app
 
 RUN pip install --upgrade pip \
+    && pip install /tmp/messaging \
     && pip install .
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8005
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8005"]

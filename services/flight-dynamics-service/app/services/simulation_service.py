@@ -339,6 +339,24 @@ class SimulationService:
 
         self._repository.add_checkpoint(checkpoint)
 
+    async def cleanup(
+        self,
+        mission_id: UUID,
+    ) -> None:
+        simulation = await self._repository.get_by_mission_id(
+            mission_id,
+            for_update=True,
+        )
+
+        runtime_store.remove(mission_id)
+
+        if simulation is None:
+            return
+
+        await self._repository.delete_session(simulation)
+
+        await self._session.commit()
+
 
 def _create_runtime(
     request: SimulationInitializeRequest,

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "resources-validated.schema.json",
+  "title": "Resources Validated",
+  "type": "object",
+  "required": [
+    "saga_id",
+    "mission_id",
+    "vehicle_id"
+  ],
+  "properties": {
+    "saga_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "vehicle_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "resources": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from pathlib import Path
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -50,3 +51,23 @@ async def client() -> AsyncIterator[AsyncClient]:
         await connection.run_sync(Base.metadata.drop_all)
 
     await test_engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def session(
+    tmp_path: Path,
+) -> AsyncIterator[AsyncSession]:
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'test.db'}")
+
+    factory = async_sessionmaker(
+        engine,
+        expire_on_commit=False,
+    )
+
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+
+    async with factory() as test_session:
+        yield test_session
+
+    await engine.dispose()

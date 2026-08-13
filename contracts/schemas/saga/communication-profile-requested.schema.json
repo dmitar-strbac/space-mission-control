@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "communication-profile-requested.schema.json",
+  "title": "Communication Profile Requested",
+  "type": "object",
+  "required": [
+    "saga_id",
+    "mission_id",
+    "mission"
+  ],
+  "properties": {
+    "saga_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mission": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}
