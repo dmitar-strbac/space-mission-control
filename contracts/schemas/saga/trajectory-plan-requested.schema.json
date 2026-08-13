@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "trajectory-plan-requested.schema.json",
+  "title": "Trajectory Plan Requested",
+  "type": "object",
+  "required": [
+    "saga_id",
+    "mission_id",
+    "vehicle_id"
+  ],
+  "properties": {
+    "saga_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "vehicle_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mission": {
+      "type": "object"
+    },
+    "vehicle": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

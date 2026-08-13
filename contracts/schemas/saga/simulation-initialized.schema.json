@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "simulation-initialized.schema.json",
+  "title": "Simulation Initialized",
+  "type": "object",
+  "required": [
+    "saga_id",
+    "mission_id",
+    "simulation_session_id"
+  ],
+  "properties": {
+    "saga_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "simulation_session_id": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "additionalProperties": false
+}

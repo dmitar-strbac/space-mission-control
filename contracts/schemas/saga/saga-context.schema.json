@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "saga-context.schema.json",
+  "title": "Prepare Mission Saga Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "saga_id",
+    "mission_id"
+  ],
+  "properties": {
+    "saga_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}

@@ -20,6 +20,7 @@ package = false
 [tool.uv.workspace]
 members = [
     "packages/orbital-mechanics",
+    "packages/messaging",
     "services/mission-service",
     "services/vehicle-service",
     "services/trajectory-service",
