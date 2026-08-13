@@ -326,3 +326,29 @@ class SpacecraftService:
             propellant_capacity_kg=(spacecraft.propellant_capacity_kg),
             engine_specific_impulse_s=(spacecraft.engine_specific_impulse_s),
         )
+
+    async def release_for_mission(
+        self,
+        mission_id: UUID,
+    ) -> Spacecraft | None:
+        reservation = await self._reservations.get_by_mission_id(mission_id)
+
+        if reservation is None:
+            return None
+
+        spacecraft = await self._repository.get_by_id(
+            reservation.spacecraft_id,
+            for_update=True,
+        )
+
+        await self._reservations.delete(reservation)
+
+        if spacecraft is not None:
+            spacecraft.status = SpacecraftStatus.AVAILABLE
+
+        await self._session.commit()
+
+        if spacecraft is not None:
+            await self._session.refresh(spacecraft)
+
+        return spacecraft

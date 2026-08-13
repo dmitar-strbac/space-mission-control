@@ -32,3 +32,9 @@ class CommunicationProfileRepository:
         result = await self._session.execute(statement)
 
         return result.scalar_one_or_none()
+
+    async def delete(
+        self,
+        profile: CommunicationProfile,
+    ) -> None:
+        await self._session.delete(profile)

@@ -10,9 +10,7 @@ from app.domain.exceptions import (
     CommunicationProfileNotFoundError,
 )
 from app.models.communication_profile import CommunicationProfile
-from app.repositories.communication_profile_repository import (
-    CommunicationProfileRepository,
-)
+from app.repositories.communication_profile_repository import CommunicationProfileRepository
 from app.schemas.communication_profile import (
     CommunicationProfileCreateRequest,
     CommunicationProfileUpdateRequest,
@@ -95,3 +93,19 @@ class CommunicationService:
         await self._session.refresh(profile)
 
         return profile
+
+    async def remove_profile(
+        self,
+        mission_id: UUID,
+    ) -> None:
+        profile = await self._repository.get_by_mission_id(
+            mission_id,
+            for_update=True,
+        )
+
+        if profile is None:
+            return
+
+        await self._repository.delete(profile)
+
+        await self._session.commit()

@@ -9,22 +9,20 @@ from app.core.config import get_settings
 from app.domain.enums import (
     MissionEventType,
     MissionStatus,
+    SagaStepStatus,
     SagaStepType,
 )
 from app.domain.exceptions import (
     InvalidMissionTransitionError,
     MissionNotFoundError,
 )
+from app.domain.saga import get_compensation_order
 from app.domain.transitions import can_transition
 from app.messaging.publisher import EventPublisher
 from app.models.mission import Mission
 from app.models.mission_event import MissionEvent
-from app.repositories.mission_repository import (
-    MissionRepository,
-)
-from app.services.saga_step_service import (
-    SagaStepService,
-)
+from app.repositories.mission_repository import MissionRepository
+from app.services.saga_step_service import SagaStepService
 
 
 class PrepareMissionSagaService:
@@ -491,3 +489,298 @@ class PrepareMissionSagaService:
             "vehicle_id": str(vehicle_id),
             "mission": (self._serialize_mission(mission)),
         }
+
+    async def handle_failure(
+        self,
+        envelope: EventEnvelope,
+        *,
+        failed_step: SagaStepType,
+    ) -> None:
+        saga_id, mission_id = self._extract_context(envelope)
+
+        reason = str(
+            envelope.payload.get(
+                "reason",
+                "Mission preparation step failed.",
+            )
+        )
+
+        await self._steps.mark_failed(
+            saga_id=saga_id,
+            step_type=failed_step,
+            result_event_id=envelope.event_id,
+            result_payload=envelope.payload,
+            reason=reason,
+        )
+
+        await self._session.commit()
+
+        await self._start_compensation(
+            saga_id=saga_id,
+            mission_id=mission_id,
+            causation_id=envelope.event_id,
+            failure_reason=reason,
+        )
+
+    async def handle_vehicle_released(
+        self,
+        envelope: EventEnvelope,
+    ) -> None:
+        await self._handle_compensation_result(
+            envelope=envelope,
+            step_type=(SagaStepType.VEHICLE_RESERVATION),
+        )
+
+    async def handle_trajectory_cancelled(
+        self,
+        envelope: EventEnvelope,
+    ) -> None:
+        await self._handle_compensation_result(
+            envelope=envelope,
+            step_type=(SagaStepType.TRAJECTORY_PLANNING),
+        )
+
+    async def handle_communication_profile_removed(
+        self,
+        envelope: EventEnvelope,
+    ) -> None:
+        await self._handle_compensation_result(
+            envelope=envelope,
+            step_type=(SagaStepType.COMMUNICATION_PROFILE),
+        )
+
+    async def handle_simulation_cleaned(
+        self,
+        envelope: EventEnvelope,
+    ) -> None:
+        await self._handle_compensation_result(
+            envelope=envelope,
+            step_type=(SagaStepType.SIMULATION_INITIALIZATION),
+        )
+
+    async def _start_compensation(
+        self,
+        *,
+        saga_id: UUID,
+        mission_id: UUID,
+        causation_id: UUID,
+        failure_reason: str,
+    ) -> None:
+        steps = await self._steps.list_steps(saga_id)
+
+        completed = {step.step_type for step in steps if step.status is SagaStepStatus.COMPLETED}
+
+        compensation_order = get_compensation_order(completed)
+
+        compensatable = tuple(
+            step
+            for step in compensation_order
+            if step
+            in {
+                SagaStepType.SIMULATION_INITIALIZATION,
+                SagaStepType.COMMUNICATION_PROFILE,
+                SagaStepType.TRAJECTORY_PLANNING,
+                SagaStepType.VEHICLE_RESERVATION,
+            }
+        )
+
+        if not compensatable:
+            await self._finish_failed_preparation(
+                mission_id=mission_id,
+                saga_id=saga_id,
+                reason=failure_reason,
+                causation_id=causation_id,
+            )
+            return
+
+        await self._publish_compensation(
+            saga_id=saga_id,
+            mission_id=mission_id,
+            step_type=compensatable[0],
+            causation_id=causation_id,
+        )
+
+    async def _handle_compensation_result(
+        self,
+        *,
+        envelope: EventEnvelope,
+        step_type: SagaStepType,
+    ) -> None:
+        saga_id, mission_id = self._extract_context(envelope)
+
+        await self._steps.mark_compensated(
+            saga_id=saga_id,
+            step_type=step_type,
+        )
+
+        await self._session.commit()
+
+        steps = await self._steps.list_steps(saga_id)
+
+        completed = {step.step_type for step in steps if step.status is SagaStepStatus.COMPLETED}
+
+        compensation_order = get_compensation_order(completed)
+
+        remaining = [
+            step
+            for step in compensation_order
+            if step
+            in {
+                SagaStepType.SIMULATION_INITIALIZATION,
+                SagaStepType.COMMUNICATION_PROFILE,
+                SagaStepType.TRAJECTORY_PLANNING,
+                SagaStepType.VEHICLE_RESERVATION,
+            }
+        ]
+
+        if remaining:
+            await self._publish_compensation(
+                saga_id=saga_id,
+                mission_id=mission_id,
+                step_type=remaining[0],
+                causation_id=envelope.event_id,
+            )
+            return
+
+        failed_step = next(
+            (step for step in steps if step.status is SagaStepStatus.FAILED),
+            None,
+        )
+
+        reason = (
+            failed_step.failure_reason if failed_step is not None else "Mission preparation failed."
+        )
+
+        await self._finish_failed_preparation(
+            mission_id=mission_id,
+            saga_id=saga_id,
+            reason=reason or "Mission preparation failed.",
+            causation_id=envelope.event_id,
+        )
+
+    async def _publish_compensation(
+        self,
+        *,
+        saga_id: UUID,
+        mission_id: UUID,
+        step_type: SagaStepType,
+        causation_id: UUID,
+    ) -> None:
+        step = await self._steps.get_step(
+            saga_id=saga_id,
+            step_type=step_type,
+        )
+
+        await self._steps.mark_compensating(
+            saga_id=saga_id,
+            step_type=step_type,
+        )
+
+        if step_type is SagaStepType.SIMULATION_INITIALIZATION:
+            subject = SagaSubject.SIMULATION_CLEANUP_REQUESTED
+        elif step_type is SagaStepType.COMMUNICATION_PROFILE:
+            subject = SagaSubject.COMMUNICATION_PROFILE_REMOVE_REQUESTED
+        elif step_type is SagaStepType.TRAJECTORY_PLANNING:
+            subject = SagaSubject.TRAJECTORY_PLAN_CANCEL_REQUESTED
+        elif step_type is SagaStepType.VEHICLE_RESERVATION:
+            subject = SagaSubject.VEHICLE_RELEASE_REQUESTED
+        else:
+            raise RuntimeError("Saga step has no compensation operation.")
+
+        payload = {
+            "saga_id": str(saga_id),
+            "mission_id": str(mission_id),
+        }
+
+        if step.result_payload is not None:
+            payload.update(
+                {
+                    key: value
+                    for key, value in step.result_payload.items()
+                    if key
+                    not in {
+                        "saga_id",
+                        "mission_id",
+                    }
+                }
+            )
+
+        envelope = EventEnvelope.create(
+            event_type=subject.value,
+            source=self._source,
+            correlation_id=str(saga_id),
+            causation_id=causation_id,
+            payload=payload,
+        )
+
+        await self._session.commit()
+
+        await self._publisher.publish(
+            subject=subject.value,
+            envelope=envelope,
+        )
+
+    async def _finish_failed_preparation(
+        self,
+        *,
+        mission_id: UUID,
+        saga_id: UUID,
+        reason: str,
+        causation_id: UUID,
+    ) -> None:
+        mission = await self._missions.get_by_id(
+            mission_id,
+            for_update=True,
+        )
+
+        if mission is None:
+            raise MissionNotFoundError(mission_id)
+
+        if mission.status is not MissionStatus.FAILED_PREPARATION:
+            previous_status = mission.status
+
+            if not can_transition(
+                previous_status,
+                MissionStatus.FAILED_PREPARATION,
+            ):
+                raise InvalidMissionTransitionError(
+                    mission.id,
+                    previous_status,
+                    MissionStatus.FAILED_PREPARATION,
+                )
+
+            mission.status = MissionStatus.FAILED_PREPARATION
+            mission.failure_reason = reason
+
+            self._missions.add_event(
+                MissionEvent(
+                    mission_id=mission.id,
+                    event_type=(MissionEventType.PREPARATION_FAILED),
+                    source=self._source,
+                    payload={
+                        "saga_id": str(saga_id),
+                        "previous_status": (previous_status.value),
+                        "new_status": (MissionStatus.FAILED_PREPARATION.value),
+                        "reason": reason,
+                    },
+                )
+            )
+
+            await self._session.commit()
+
+        event = EventEnvelope.create(
+            event_type=(SagaSubject.MISSION_PREPARATION_FAILED.value),
+            source=self._source,
+            correlation_id=str(saga_id),
+            causation_id=causation_id,
+            payload={
+                "saga_id": str(saga_id),
+                "mission_id": str(mission_id),
+                "reason": reason,
+            },
+        )
+
+        await self._publisher.publish(
+            subject=(SagaSubject.MISSION_PREPARATION_FAILED.value),
+            envelope=event,
+        )

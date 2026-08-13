@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import select
@@ -93,3 +94,22 @@ class SagaRepository:
         result = await self._session.scalar(statement)
 
         return result
+
+    async def list_timed_out_steps(
+        self,
+        *,
+        cutoff: datetime,
+    ) -> Sequence[SagaStep]:
+        statement = (
+            select(SagaStep)
+            .where(
+                SagaStep.status == SagaStepStatus.IN_PROGRESS,
+                SagaStep.started_at.is_not(None),
+                SagaStep.started_at < cutoff,
+            )
+            .order_by(SagaStep.started_at.asc())
+        )
+
+        result = await self._session.scalars(statement)
+
+        return result.all()

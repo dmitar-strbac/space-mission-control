@@ -34,6 +34,8 @@ class SagaSubject(StrEnum):
     SIMULATION_INITIALIZE_REQUESTED = "simulation.initialize.requested"
     SIMULATION_INITIALIZED = "simulation.initialized"
     SIMULATION_INITIALIZATION_REJECTED = "simulation.initialization.rejected"
+    SIMULATION_CLEANUP_REQUESTED = "simulation.cleanup.requested"
+    SIMULATION_CLEANED = "simulation.cleaned"
 
 
 WORKFLOW_STREAM_NAME = "SMC_WORKFLOWS"

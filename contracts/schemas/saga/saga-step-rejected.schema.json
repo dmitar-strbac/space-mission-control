@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "saga-step-rejected.schema.json",
+  "title": "Prepare Mission Saga Step Rejected",
+  "type": "object",
+  "required": [
+    "saga_id",
+    "mission_id",
+    "reason"
+  ],
+  "properties": {
+    "saga_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": true
+}

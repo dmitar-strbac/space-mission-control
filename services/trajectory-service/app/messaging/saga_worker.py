@@ -1,3 +1,4 @@
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
@@ -11,6 +12,7 @@ from smc_messaging import (
 from app.core.config import get_settings
 from app.core.database import SessionFactory
 from app.schemas.trajectory import TrajectoryPlanRequest
+from app.services.idempotency_service import IdempotencyService
 from app.services.trajectory_service import TrajectoryService
 
 settings = get_settings()
@@ -82,110 +84,206 @@ def _parse_departure_time(
 async def register_trajectory_saga_worker(
     event_bus: EventBus,
 ) -> None:
+    async def _publish_failure(
+        *,
+        event_bus: EventBus,
+        envelope: EventEnvelope,
+        subject: SagaSubject,
+        reason: str,
+    ) -> None:
+        payload = {
+            "saga_id": envelope.payload["saga_id"],
+            "mission_id": envelope.payload["mission_id"],
+            "reason": reason,
+        }
+
+        result = EventEnvelope.create(
+            event_type=subject.value,
+            source=settings.service_name,
+            correlation_id=envelope.correlation_id,
+            causation_id=envelope.event_id,
+            payload=payload,
+        )
+
+        await event_bus.publish(
+            subject=subject.value,
+            envelope=result,
+        )
+
     async def plan_trajectory(
         envelope: EventEnvelope,
     ) -> None:
-        mission = _require_dict(
-            envelope.payload,
-            "mission",
-        )
+        try:
+            mission = _require_dict(
+                envelope.payload,
+                "mission",
+            )
 
-        vehicle = _require_dict(
-            envelope.payload,
-            "vehicle",
-        )
+            vehicle = _require_dict(
+                envelope.payload,
+                "vehicle",
+            )
 
-        target_parameters = _require_dict(
-            mission,
-            "target_parameters",
-        )
+            target_parameters = _require_dict(
+                mission,
+                "target_parameters",
+            )
 
+            mission_id = _require_uuid(
+                envelope.payload,
+                "mission_id",
+            )
+
+            request = TrajectoryPlanRequest(
+                mission_id=mission_id,
+                initial_altitude_m=_require_float(
+                    target_parameters,
+                    "initial_altitude_m",
+                ),
+                target_altitude_m=_require_float(
+                    target_parameters,
+                    "target_altitude_m",
+                ),
+                total_mass_kg=_require_float(
+                    vehicle,
+                    "initial_mass_kg",
+                ),
+                available_propellant_kg=_require_float(
+                    vehicle,
+                    "propellant_capacity_kg",
+                ),
+                engine_specific_impulse_s=_require_float(
+                    vehicle,
+                    "engine_specific_impulse_s",
+                ),
+                departure_time=(_parse_departure_time(mission)),
+                minimum_propellant_reserve_percent=_optional_float(
+                    target_parameters,
+                    "minimum_propellant_reserve_percent",
+                    default=10.0,
+                ),
+            )
+
+            async with SessionFactory() as session:
+                trajectory = await TrajectoryService(session).plan(request)
+
+            trajectory_payload = {
+                "id": str(trajectory.id),
+                "departure_time": (trajectory.departure_time.isoformat()),
+                "arrival_time": (trajectory.arrival_time.isoformat()),
+                "initial_total_mass_kg": (trajectory.initial_state_vector["total_mass_kg"]),
+                "initial_state_vector": (trajectory.initial_state_vector),
+                "target_state_vector": (trajectory.target_state_vector),
+                "required_delta_v_m_s": (trajectory.required_delta_v_m_s),
+                "estimated_propellant_kg": (trajectory.estimated_propellant_kg),
+                "propellant_reserve_percent": (trajectory.propellant_reserve_percent),
+                "minimum_propellant_reserve_percent": (request.minimum_propellant_reserve_percent),
+                "safety_margin_percent": (trajectory.safety_margin_percent),
+                "window_score": (trajectory.window_score),
+                "status": trajectory.status.value,
+                "maneuvers": [
+                    {
+                        "id": str(maneuver.id),
+                        "sequence": maneuver.sequence,
+                        "maneuver_type": (maneuver.maneuver_type.value),
+                        "delta_v_m_s": (maneuver.delta_v_m_s),
+                        "planned_offset_s": (maneuver.planned_offset_s),
+                    }
+                    for maneuver in trajectory.maneuvers
+                ],
+            }
+
+            payload = {
+                "saga_id": envelope.payload["saga_id"],
+                "mission_id": str(mission_id),
+                "trajectory_plan_id": str(trajectory.id),
+                "trajectory": trajectory_payload,
+            }
+
+            result = EventEnvelope.create(
+                event_type=(SagaSubject.TRAJECTORY_PLAN_CREATED.value),
+                source=settings.service_name,
+                correlation_id=(envelope.correlation_id),
+                causation_id=(envelope.event_id),
+                payload=payload,
+            )
+
+            await event_bus.publish(
+                subject=(SagaSubject.TRAJECTORY_PLAN_CREATED.value),
+                envelope=result,
+            )
+        except Exception as error:
+            await _publish_failure(
+                event_bus=event_bus,
+                envelope=envelope,
+                subject=(SagaSubject.TRAJECTORY_PLAN_REJECTED),
+                reason=str(error),
+            )
+            return
+
+    async def cancel_trajectory(
+        envelope: EventEnvelope,
+    ) -> None:
         mission_id = _require_uuid(
             envelope.payload,
             "mission_id",
         )
 
-        request = TrajectoryPlanRequest(
-            mission_id=mission_id,
-            initial_altitude_m=_require_float(
-                target_parameters,
-                "initial_altitude_m",
-            ),
-            target_altitude_m=_require_float(
-                target_parameters,
-                "target_altitude_m",
-            ),
-            total_mass_kg=_require_float(
-                vehicle,
-                "initial_mass_kg",
-            ),
-            available_propellant_kg=_require_float(
-                vehicle,
-                "propellant_capacity_kg",
-            ),
-            engine_specific_impulse_s=_require_float(
-                vehicle,
-                "engine_specific_impulse_s",
-            ),
-            departure_time=(_parse_departure_time(mission)),
-            minimum_propellant_reserve_percent=_optional_float(
-                target_parameters,
-                "minimum_propellant_reserve_percent",
-                default=10.0,
-            ),
-        )
-
         async with SessionFactory() as session:
-            trajectory = await TrajectoryService(session).plan(request)
-
-        trajectory_payload = {
-            "id": str(trajectory.id),
-            "departure_time": (trajectory.departure_time.isoformat()),
-            "arrival_time": (trajectory.arrival_time.isoformat()),
-            "initial_total_mass_kg": (trajectory.initial_state_vector["total_mass_kg"]),
-            "initial_state_vector": (trajectory.initial_state_vector),
-            "target_state_vector": (trajectory.target_state_vector),
-            "required_delta_v_m_s": (trajectory.required_delta_v_m_s),
-            "estimated_propellant_kg": (trajectory.estimated_propellant_kg),
-            "propellant_reserve_percent": (trajectory.propellant_reserve_percent),
-            "minimum_propellant_reserve_percent": (request.minimum_propellant_reserve_percent),
-            "safety_margin_percent": (trajectory.safety_margin_percent),
-            "window_score": (trajectory.window_score),
-            "status": trajectory.status.value,
-            "maneuvers": [
-                {
-                    "id": str(maneuver.id),
-                    "sequence": maneuver.sequence,
-                    "maneuver_type": (maneuver.maneuver_type.value),
-                    "delta_v_m_s": (maneuver.delta_v_m_s),
-                    "planned_offset_s": (maneuver.planned_offset_s),
-                }
-                for maneuver in trajectory.maneuvers
-            ],
-        }
-
-        payload = {
-            "saga_id": envelope.payload["saga_id"],
-            "mission_id": str(mission_id),
-            "trajectory_plan_id": str(trajectory.id),
-            "trajectory": trajectory_payload,
-        }
+            await TrajectoryService(session).cancel(mission_id)
 
         result = EventEnvelope.create(
-            event_type=(SagaSubject.TRAJECTORY_PLAN_CREATED.value),
+            event_type=(SagaSubject.TRAJECTORY_PLAN_CANCELLED.value),
             source=settings.service_name,
             correlation_id=(envelope.correlation_id),
-            causation_id=(envelope.event_id),
-            payload=payload,
+            causation_id=envelope.event_id,
+            payload={
+                "saga_id": envelope.payload["saga_id"],
+                "mission_id": str(mission_id),
+            },
         )
 
         await event_bus.publish(
-            subject=(SagaSubject.TRAJECTORY_PLAN_CREATED.value),
+            subject=(SagaSubject.TRAJECTORY_PLAN_CANCELLED.value),
             envelope=result,
         )
+
+    async def _run_once(
+        envelope: EventEnvelope,
+        handler: Callable[
+            [EventEnvelope],
+            Awaitable[None],
+        ],
+    ) -> None:
+        async with SessionFactory() as session:
+            service = IdempotencyService(session)
+
+            if await service.was_processed(envelope):
+                return
+
+        await handler(envelope)
+
+        async with SessionFactory() as session:
+            await IdempotencyService(session).mark_processed(envelope)
+
+    async def plan_trajectory_handler(
+        envelope: EventEnvelope,
+    ) -> None:
+        await _run_once(envelope, plan_trajectory)
+
+    async def cancel_trajectory_handler(
+        envelope: EventEnvelope,
+    ) -> None:
+        await _run_once(envelope, cancel_trajectory)
 
     await event_bus.subscribe(
         subject=(SagaSubject.TRAJECTORY_PLAN_REQUESTED.value),
         durable_name=("trajectory-saga-planning-worker"),
-        handler=plan_trajectory,
+        handler=plan_trajectory_handler,
+    )
+
+    await event_bus.subscribe(
+        subject=(SagaSubject.TRAJECTORY_PLAN_CANCEL_REQUESTED.value),
+        durable_name=("trajectory-saga-cancel-worker"),
+        handler=cancel_trajectory_handler,
     )

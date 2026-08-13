@@ -115,7 +115,8 @@ services:
 
   mission-service:
     build:
-      context: ./services/mission-service
+      context: .
+      dockerfile: services/mission-service/Dockerfile
     container_name: smc-mission-service
     restart: unless-stopped
     command:
@@ -242,7 +243,8 @@ services:
 
   communication-service:
     build:
-      context: ./services/communication-service
+      context: .
+      dockerfile: services/communication-service/Dockerfile
     container_name: smc-communication-service
     restart: unless-stopped
     command:

@@ -34,3 +34,17 @@ def test_compensation_order_is_reversed() -> None:
         SagaStepType.TRAJECTORY_PLANNING,
         SagaStepType.VEHICLE_RESERVATION,
     )
+
+
+def test_compensation_order_skips_uncompleted_steps() -> None:
+    completed = {
+        SagaStepType.VEHICLE_RESERVATION,
+        SagaStepType.TRAJECTORY_PLANNING,
+        SagaStepType.COMMUNICATION_PROFILE,
+    }
+
+    assert get_compensation_order(completed) == (
+        SagaStepType.COMMUNICATION_PROFILE,
+        SagaStepType.TRAJECTORY_PLANNING,
+        SagaStepType.VEHICLE_RESERVATION,
+    )

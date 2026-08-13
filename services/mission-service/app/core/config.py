@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     environment: str = "development"
     log_level: str = "INFO"
 
+    saga_step_timeout_seconds: int = 30
+    saga_timeout_poll_interval_seconds: int = 5
+
     nats_url: str = "nats://nats:4222"
     messaging_enabled: bool = False
     database_url: str = Field(default="postgresql+asyncpg://smc:smc@postgres:5432/mission_service")

@@ -188,3 +188,20 @@ class SagaStepService:
             raise RuntimeError(f"Saga step was not initialized: {saga_id} / {step_type.value}")
 
         return step
+
+    async def list_steps(
+        self,
+        saga_id: UUID,
+    ) -> list[SagaStep]:
+        return list(await self._repository.list_steps(saga_id))
+
+    async def get_step(
+        self,
+        *,
+        saga_id: UUID,
+        step_type: SagaStepType,
+    ) -> SagaStep:
+        return await self._require_step(
+            saga_id=saga_id,
+            step_type=step_type,
+        )
