@@ -12,6 +12,8 @@ from app.api.routes.simulations import (
 from app.core.config import get_settings
 from app.core.database import engine
 from app.core.logging import configure_logging
+from app.messaging.publisher import event_bus
+from app.messaging.saga_worker import register_flight_dynamics_saga_worker
 from app.services.runtime_store import runtime_store
 
 settings = get_settings()
@@ -30,7 +32,15 @@ async def lifespan(
         settings.service_name,
     )
 
+    if settings.messaging_enabled:
+        await event_bus.connect()
+
+        await register_flight_dynamics_saga_worker(event_bus)
+
     yield
+
+    if settings.messaging_enabled:
+        await event_bus.close()
 
     runtime_store.clear()
 

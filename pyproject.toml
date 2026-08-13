@@ -65,6 +65,9 @@ line-ending = "auto"
 python_version = "3.13"
 strict = true
 warn_unused_configs = true
+mypy_path = [
+    "packages/messaging",
+]
 exclude = [
     "frontend/",
 ]

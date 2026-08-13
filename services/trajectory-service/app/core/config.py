@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     nats_url: str = "nats://nats:4222"
-
+    messaging_enabled: bool = False
     database_url: str = Field(
         default=("postgresql+asyncpg://smc:smc@postgres:5432/trajectory_service")
     )

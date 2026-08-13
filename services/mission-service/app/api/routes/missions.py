@@ -5,12 +5,23 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_session
+from app.messaging.publisher import (
+    EventPublisher,
+    get_event_publisher,
+)
 from app.schemas.mission import MissionCreate, MissionListResponse, MissionResponse
 from app.schemas.mission_event import MissionEventResponse
 from app.services.mission_service import MissionService
+from app.services.prepare_mission_saga import (
+    PrepareMissionSagaService,
+)
 
 router = APIRouter(prefix="/missions", tags=["Missions"])
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
+PublisherDependency = Annotated[
+    EventPublisher,
+    Depends(get_event_publisher),
+]
 
 
 @router.post("", response_model=MissionResponse, status_code=status.HTTP_201_CREATED)
@@ -40,9 +51,20 @@ async def get_mission(mission_id: UUID, session: SessionDependency) -> MissionRe
     return MissionResponse.model_validate(mission)
 
 
-@router.post("/{mission_id}/prepare", response_model=MissionResponse)
-async def prepare_mission(mission_id: UUID, session: SessionDependency) -> MissionResponse:
-    mission = await MissionService(session).prepare(mission_id)
+@router.post(
+    "/{mission_id}/prepare",
+    response_model=MissionResponse,
+)
+async def prepare_mission(
+    mission_id: UUID,
+    session: SessionDependency,
+    publisher: PublisherDependency,
+) -> MissionResponse:
+    mission = await PrepareMissionSagaService(
+        session,
+        publisher,
+    ).start(mission_id)
+
     return MissionResponse.model_validate(mission)
 
 

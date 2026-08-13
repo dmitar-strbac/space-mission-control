@@ -247,11 +247,19 @@ class PrepareMissionSagaService:
             step_type=(SagaStepType.TRAJECTORY_PLANNING),
         )
 
+        resources_result = await self._steps.get_result_payload(
+            saga_id=saga_id,
+            step_type=(SagaStepType.RESOURCE_VALIDATION),
+        )
+
         if vehicle_result is None:
             raise RuntimeError("Vehicle reservation result is missing.")
 
         if trajectory_result is None:
             raise RuntimeError("Trajectory planning result is missing.")
+
+        if resources_result is None:
+            raise RuntimeError("Resource validation result is missing.")
 
         trajectory_plan_id = self._require_uuid_field(
             trajectory_result,
@@ -270,6 +278,10 @@ class PrepareMissionSagaService:
             ),
             "trajectory": trajectory_result.get(
                 "trajectory",
+                {},
+            ),
+            "resources": resources_result.get(
+                "resources",
                 {},
             ),
         }
@@ -451,6 +463,18 @@ class PrepareMissionSagaService:
                 planned_launch_time.isoformat() if planned_launch_time is not None else None
             ),
             "simulation_speed": (mission.simulation_speed),
+            "oxygen_consumption_rate_kg_s": float(
+                mission.target_parameters.get(
+                    "oxygen_consumption_rate_kg_s",
+                    0.0,
+                )
+            ),
+            "power_consumption_kw": float(
+                mission.target_parameters.get(
+                    "power_consumption_kw",
+                    0.0,
+                )
+            ),
         }
 
     def _build_vehicle_reservation_payload(

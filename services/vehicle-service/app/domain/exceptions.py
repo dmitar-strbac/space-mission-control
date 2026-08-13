@@ -51,3 +51,21 @@ class InvalidManualStatusError(VehicleServiceError):
         super().__init__(
             f"Spacecraft status '{status.value}' cannot be assigned through the configuration API."
         )
+
+
+class VehicleReservationConflictError(VehicleServiceError):
+    def __init__(
+        self,
+        spacecraft_id: UUID,
+    ) -> None:
+        self.spacecraft_id = spacecraft_id
+
+        super().__init__(f"Spacecraft '{spacecraft_id}' is already reserved by another mission.")
+
+
+class VehicleValidationRejectedError(VehicleServiceError):
+    def __init__(
+        self,
+        message: str,
+    ) -> None:
+        super().__init__(message)
