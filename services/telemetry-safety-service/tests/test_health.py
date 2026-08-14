@@ -21,8 +21,9 @@ def test_root_endpoint_returns_service_information() -> None:
     response = client.get("/")
 
     assert response.status_code == 200
+
     assert response.json() == {
         "service": "telemetry-safety-service",
-        "message": "Telemetry Safety Service is running.",
+        "message": ("Telemetry & Safety Service is running."),
         "documentation": "/docs",
     }

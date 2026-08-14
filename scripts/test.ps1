@@ -6,7 +6,8 @@ $testTargets = @(
     "services/vehicle-service",
     "services/trajectory-service",
     "services/flight-dynamics-service",
-    "services/communication-service"
+    "services/communication-service",
+    "services/telemetry-safety-service"
 )
 
 $root = Resolve-Path (Join-Path $PSScriptRoot "..")

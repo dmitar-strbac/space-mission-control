@@ -204,7 +204,7 @@ docker compose up --build
 
 ## 🗺️ Roadmap
 
-The project has completed the **Core Mission Simulation** and **Mission Preparation Saga** milestones, establishing the main backend services and distributed workflow required for Low Earth Orbit (LEO) mission preparation and simulation.
+The project has completed the **Core Mission Simulation**, **Mission Preparation Saga**, and **Telemetry & Safety Service** milestones, establishing the main backend services, distributed mission preparation workflow, and real-time telemetry pipeline required for Low Earth Orbit (LEO) mission simulation.
 
 The roadmap below outlines the remaining implementation order and overall project progression.
 
@@ -215,12 +215,12 @@ The roadmap below outlines the remaining implementation order and overall projec
 - [x] Vehicle Service
 - [x] Trajectory Service
 - [x] Flight Dynamics Service
-- [ ] Telemetry & Safety Service
+- [x] Telemetry & Safety Service
 - [x] Communication Service
 - [ ] API Gateway
 - [ ] React frontend
 - [x] Prepare Mission Saga
-- [ ] Real-time telemetry
+- [x] Real-time telemetry
 - [ ] Emergency Abort workflow
 - [ ] Docker deployment
 

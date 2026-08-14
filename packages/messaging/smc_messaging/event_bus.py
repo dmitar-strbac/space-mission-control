@@ -96,6 +96,25 @@ class EventBus:
             subject,
         )
 
+    async def publish_ephemeral(
+        self,
+        *,
+        subject: str,
+        envelope: EventEnvelope,
+    ) -> None:
+        connection = self._require_connection()
+
+        await connection.publish(
+            subject,
+            envelope.to_bytes(),
+        )
+
+        logger.debug(
+            "Published ephemeral event %s to %s",
+            envelope.event_type,
+            subject,
+        )
+
     async def subscribe(
         self,
         *,
@@ -140,6 +159,41 @@ class EventBus:
 
         return subscription
 
+    async def subscribe_ephemeral(
+        self,
+        *,
+        subject: str,
+        handler: EventHandler,
+    ) -> Subscription:
+        connection = self._require_connection()
+
+        async def callback(
+            message: Msg,
+        ) -> None:
+            try:
+                envelope = EventEnvelope.from_bytes(message.data)
+
+                await handler(envelope)
+            except Exception:
+                logger.exception(
+                    "Failed processing ephemeral message from subject %s",
+                    message.subject,
+                )
+
+        subscription = await connection.subscribe(
+            subject,
+            cb=callback,
+        )
+
+        self._subscriptions.append(subscription)
+
+        logger.info(
+            "Subscribed to ephemeral subject %s",
+            subject,
+        )
+
+        return subscription
+
     async def _ensure_workflow_stream(
         self,
     ) -> None:
@@ -157,6 +211,12 @@ class EventBus:
                 "Created JetStream stream %s",
                 WORKFLOW_STREAM_NAME,
             )
+
+    def _require_connection(self) -> NATS:
+        if self._connection is None or not self._connection.is_connected:
+            raise RuntimeError("Event bus is not connected.")
+
+        return self._connection
 
     def _require_jetstream(
         self,

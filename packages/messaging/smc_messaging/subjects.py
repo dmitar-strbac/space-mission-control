@@ -38,6 +38,24 @@ class SagaSubject(StrEnum):
     SIMULATION_CLEANED = "simulation.cleaned"
 
 
+class LiveSubject(StrEnum):
+    SIMULATION_STATE_UPDATED = "simulation.state.updated"
+    TELEMETRY_PROCESSED = "telemetry.processed"
+
+
+class IntegrationSubject(StrEnum):
+    COMMUNICATION_STATUS_UPDATED = "communication.status.updated"
+
+
+class SafetySubject(StrEnum):
+    TELEMETRY_ALERT_CREATED = "telemetry.alert.created"
+
+    CORRECTIVE_MANEUVER_RECOMMENDED = "safety.corrective_maneuver.recommended"
+
+    RETURN_RECOMMENDED = "safety.return.recommended"
+    ABORT_RECOMMENDED = "safety.abort.recommended"
+
+
 WORKFLOW_STREAM_NAME = "SMC_WORKFLOWS"
 
 WORKFLOW_STREAM_SUBJECTS = [
@@ -47,4 +65,6 @@ WORKFLOW_STREAM_SUBJECTS = [
     "resources.>",
     "communication.>",
     "simulation.>",
+    "telemetry.alert.created",
+    "safety.>",
 ]

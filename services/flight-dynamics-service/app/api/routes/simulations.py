@@ -5,7 +5,10 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.serialization import simulation_state_response
+from app.core.config import get_settings
 from app.core.database import get_session
+from app.messaging.publisher import event_bus
+from app.messaging.state_publisher import publish_simulation_state
 from app.schemas.simulation import (
     SimulationAdvanceRequest,
     SimulationAdvanceResponse,
@@ -20,6 +23,8 @@ router = APIRouter(
     prefix="/simulations",
     tags=["Simulations"],
 )
+
+settings = get_settings()
 
 SessionDependency = Annotated[
     AsyncSession,
@@ -110,6 +115,13 @@ async def advance_simulation(
         mission_id,
         real_duration_s=payload.real_duration_s,
     )
+
+    if settings.messaging_enabled:
+        await publish_simulation_state(
+            event_bus=event_bus,
+            simulation=simulation,
+            runtime=runtime,
+        )
 
     return SimulationAdvanceResponse(
         simulated_duration_s=(payload.real_duration_s * simulation.simulation_speed),

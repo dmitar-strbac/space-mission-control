@@ -11,6 +11,7 @@ from smc_messaging import (
 from app.core.config import get_settings
 from app.core.database import SessionFactory
 from app.domain.enums import SignalStatus
+from app.messaging.status_publisher import publish_communication_status
 from app.schemas.communication_profile import CommunicationProfileCreateRequest
 from app.services.communication_service import CommunicationService
 from app.services.idempotency_service import IdempotencyService
@@ -112,6 +113,12 @@ async def register_communication_saga_worker(
 
             async with SessionFactory() as session:
                 profile = await CommunicationService(session).create_profile(request)
+
+            await publish_communication_status(
+                event_bus=event_bus,
+                profile=profile,
+                causation_id=envelope.event_id,
+            )
 
             payload = {
                 "saga_id": envelope.payload["saga_id"],
