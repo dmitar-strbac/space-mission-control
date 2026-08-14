@@ -6,6 +6,9 @@ from smc_messaging.event_bus import (
 from smc_messaging.subjects import (
     WORKFLOW_STREAM_NAME,
     WORKFLOW_STREAM_SUBJECTS,
+    IntegrationSubject,
+    LiveSubject,
+    SafetySubject,
     SagaSubject,
 )
 
@@ -13,6 +16,9 @@ __all__ = [
     "EventBus",
     "EventEnvelope",
     "EventHandler",
+    "IntegrationSubject",
+    "LiveSubject",
+    "SafetySubject",
     "SagaSubject",
     "WORKFLOW_STREAM_NAME",
     "WORKFLOW_STREAM_SUBJECTS",

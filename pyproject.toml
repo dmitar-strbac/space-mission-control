@@ -26,6 +26,7 @@ members = [
     "services/trajectory-service",
     "services/flight-dynamics-service",
     "services/communication-service",
+    "services/telemetry-safety-service",
 ]
 
 [tool.ruff]

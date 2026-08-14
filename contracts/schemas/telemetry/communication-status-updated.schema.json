@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "communication-status-updated.schema.json",
+  "title": "Communication Status Updated",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "signal_status",
+    "one_way_delay_ms",
+    "packet_loss_percent",
+    "observed_at"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "signal_status": {
+      "type": "string",
+      "enum": [
+        "AVAILABLE",
+        "DEGRADED",
+        "LOST"
+      ]
+    },
+    "one_way_delay_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "packet_loss_percent": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

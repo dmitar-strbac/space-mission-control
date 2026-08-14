@@ -1,21 +1,24 @@
 [project]
 name = "telemetry-safety-service"
 version = "0.1.0"
-description = "Telemetry processing and mission safety service."
+description = "Real-time telemetry processing and mission safety monitoring service."
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi",
-    "pydantic-settings",
-    "uvicorn[standard]",
+    "fastapi>=0.115",
+    "pydantic-settings>=2.7",
+    "pymongo>=4.13",
+    "space-mission-messaging",
+    "uvicorn[standard]>=0.34",
 ]
 
 [dependency-groups]
 dev = [
-    "httpx",
-    "mypy",
-    "pytest",
-    "pytest-cov",
-    "ruff",
+    "httpx>=0.28",
+    "mypy>=1.14",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
+    "pytest-cov>=6.0",
+    "ruff>=0.9",
 ]
 
 [build-system]
@@ -25,3 +28,13 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = ["--strict-markers", "-ra"]
+
+[tool.uv.sources]
+space-mission-messaging = { workspace = true }

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "simulation-state-updated.schema.json",
+  "title": "Simulation State Updated",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "simulation_session_id",
+    "simulation_time_s",
+    "position",
+    "velocity",
+    "total_mass_kg",
+    "propellant_kg",
+    "initial_propellant_kg",
+    "oxygen_kg",
+    "initial_oxygen_kg",
+    "oxygen_consumption_rate_kg_s",
+    "battery_kwh",
+    "initial_battery_kwh",
+    "power_consumption_kw",
+    "engine_thrust_n",
+    "engine_specific_impulse_s"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "simulation_session_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "simulation_time_s": {
+      "type": "number",
+      "minimum": 0
+    },
+    "position": {
+      "$ref": "#/$defs/vector2d"
+    },
+    "velocity": {
+      "$ref": "#/$defs/vector2d"
+    },
+    "total_mass_kg": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "propellant_kg": {
+      "type": "number",
+      "minimum": 0
+    },
+    "initial_propellant_kg": {
+      "type": "number",
+      "minimum": 0
+    },
+    "oxygen_kg": {
+      "type": "number",
+      "minimum": 0
+    },
+    "initial_oxygen_kg": {
+      "type": "number",
+      "minimum": 0
+    },
+    "oxygen_consumption_rate_kg_s": {
+      "type": "number",
+      "minimum": 0
+    },
+    "battery_kwh": {
+      "type": "number",
+      "minimum": 0
+    },
+    "initial_battery_kwh": {
+      "type": "number",
+      "minimum": 0
+    },
+    "power_consumption_kw": {
+      "type": "number",
+      "minimum": 0
+    },
+    "engine_thrust_n": {
+      "type": "number",
+      "minimum": 0
+    },
+    "engine_specific_impulse_s": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "active_maneuver_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    }
+  },
+  "$defs": {
+    "vector2d": {
+      "type": "object",
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

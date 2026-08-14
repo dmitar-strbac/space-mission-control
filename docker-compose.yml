@@ -275,7 +275,8 @@ services:
 
   telemetry-safety-service:
     build:
-      context: ./services/telemetry-safety-service
+      context: .
+      dockerfile: services/telemetry-safety-service/Dockerfile
     container_name: smc-telemetry-safety-service
     restart: unless-stopped
     command:
