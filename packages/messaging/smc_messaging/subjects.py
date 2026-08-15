@@ -47,6 +47,12 @@ class IntegrationSubject(StrEnum):
     COMMUNICATION_STATUS_UPDATED = "communication.status.updated"
 
 
+class FaultSubject(StrEnum):
+    FAULT_INJECTION_REQUESTED = "fault.injection.requested"
+    FAULT_INJECTED = "fault.injected"
+    FAULT_CLEARED = "fault.cleared"
+
+
 class SafetySubject(StrEnum):
     TELEMETRY_ALERT_CREATED = "telemetry.alert.created"
 
@@ -67,4 +73,5 @@ WORKFLOW_STREAM_SUBJECTS = [
     "simulation.>",
     "telemetry.alert.created",
     "safety.>",
+    "fault.>",
 ]

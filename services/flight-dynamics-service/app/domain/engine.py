@@ -1,9 +1,11 @@
 from dataclasses import dataclass
+from math import cos, radians, sin
 
 from app.domain.enums import (
     ManeuverExecutionStatus,
     ManeuverType,
 )
+from app.domain.faults import FaultType
 from app.domain.runtime import (
     RuntimeManeuver,
     SimulationRuntime,
@@ -128,6 +130,38 @@ def _advance_step(
         remaining_step_s -= coast_step_s
 
 
+def _effective_engine_throttle(
+    runtime: SimulationRuntime,
+) -> float:
+    fault = runtime.active_faults.get(FaultType.ENGINE_FAILURE)
+
+    if fault is None:
+        return 1.0
+
+    return max(
+        1.0 - fault.magnitude,
+        0.0,
+    )
+
+
+def _apply_targeting_error(
+    *,
+    runtime: SimulationRuntime,
+    direction: Vector2D,
+) -> Vector2D:
+    fault = runtime.active_faults.get(FaultType.TARGETING_ERROR)
+
+    if fault is None or fault.magnitude == 0.0:
+        return direction
+
+    angle_rad = radians(fault.magnitude)
+
+    return Vector2D(
+        x=(direction.x * cos(angle_rad) - direction.y * sin(angle_rad)),
+        y=(direction.x * sin(angle_rad) + direction.y * cos(angle_rad)),
+    ).normalized()
+
+
 def _propagate_coast(
     *,
     runtime: SimulationRuntime,
@@ -154,9 +188,16 @@ def _propagate_with_maneuver(
         maneuver=maneuver,
     )
 
+    direction = _apply_targeting_error(
+        runtime=runtime,
+        direction=direction,
+    )
+
+    throttle = _effective_engine_throttle(runtime)
+
     command = ThrustCommand(
         direction=direction,
-        throttle=1.0,
+        throttle=throttle,
     )
 
     derivative = create_dynamics_function(
@@ -276,7 +317,14 @@ def _consume_operational_resources(
     configuration: SimulationConfiguration,
     time_step_s: float,
 ) -> None:
-    oxygen_consumed_kg = configuration.oxygen_consumption_rate_kg_s * time_step_s
+    oxygen_rate_kg_s = configuration.oxygen_consumption_rate_kg_s
+
+    oxygen_fault = runtime.active_faults.get(FaultType.OXYGEN_LEAK)
+
+    if oxygen_fault is not None:
+        oxygen_rate_kg_s += oxygen_fault.magnitude
+
+    oxygen_consumed_kg = oxygen_rate_kg_s * time_step_s
 
     runtime.oxygen_kg = max(
         runtime.oxygen_kg - oxygen_consumed_kg,
@@ -289,3 +337,21 @@ def _consume_operational_resources(
         runtime.battery_kwh - battery_consumed_kwh,
         0.0,
     )
+
+    propellant_fault = runtime.active_faults.get(FaultType.PROPELLANT_LEAK)
+
+    if propellant_fault is not None:
+        leaked_propellant_kg = propellant_fault.magnitude * time_step_s
+
+        actual_leak_kg = min(
+            leaked_propellant_kg,
+            runtime.state.propellant_mass_kg,
+        )
+
+        runtime.state = StateVector(
+            position=runtime.state.position,
+            velocity=runtime.state.velocity,
+            total_mass_kg=(runtime.state.total_mass_kg - actual_leak_kg),
+            propellant_mass_kg=(runtime.state.propellant_mass_kg - actual_leak_kg),
+            elapsed_time_s=runtime.state.elapsed_time_s,
+        )

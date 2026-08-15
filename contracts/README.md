@@ -27,6 +27,7 @@ contracts/
 ├── events/
 │   └── event-envelope.schema.json
 ├── schemas/
+│   ├── faults/
 │   ├── saga/
 │   └── telemetry/
 └── README.md
@@ -43,6 +44,9 @@ Contains payload schemas used by the distributed Prepare Mission Saga, including
 
 **`schemas/telemetry/`**
 Contains payload schemas used by the real-time telemetry and mission safety flow, including simulation state updates, communication status updates, processed telemetry, alerts and safety recommendations.
+
+**`schemas/faults/`**
+Contains payload schemas for controlled fault injection events affecting active mission simulation and communication state.
 
 ---
 
@@ -105,6 +109,17 @@ The telemetry contracts cover the real-time mission monitoring flow:
 - `safety.abort.recommended`.
 
 High-frequency simulation state and processed telemetry use Core NATS pub/sub, while safety-relevant integration events use NATS JetStream.
+
+### Fault Injection
+
+Fault contracts describe controlled simulation failures used to evaluate mission safety behavior:
+
+- `fault.injected`
+- `fault.cleared`
+
+Supported basic-scope faults include engine failure, propellant leak, oxygen leak, targeting error and communication loss.
+
+Faults modify the real runtime state of the responsible service rather than generating synthetic safety alerts directly.
 
 ### Planned contracts
 

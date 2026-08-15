@@ -14,13 +14,9 @@ from app.domain.exceptions import (
     InvalidCommandTransitionError,
 )
 from app.schemas.command import CommandCreateRequest
-from app.schemas.communication_profile import (
-    CommunicationProfileCreateRequest,
-)
+from app.schemas.communication_profile import CommunicationProfileCreateRequest
 from app.services.command_service import CommandService
-from app.services.communication_service import (
-    CommunicationService,
-)
+from app.services.communication_service import CommunicationService
 
 
 async def _create_profile(

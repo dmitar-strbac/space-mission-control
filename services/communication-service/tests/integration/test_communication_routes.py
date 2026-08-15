@@ -328,3 +328,65 @@ def test_invalid_profile_values_return_422(
     )
 
     assert response.status_code == 422
+
+
+def test_inject_and_clear_communication_loss(
+    client: TestClient,
+) -> None:
+    mission_id = str(uuid4())
+
+    create_response = client.post(
+        "/communication-profiles",
+        json=_profile_payload(
+            mission_id,
+            signal_status="AVAILABLE",
+        ),
+    )
+
+    assert create_response.status_code == 201
+
+    inject_response = client.post(
+        "/faults/communication-loss",
+        json={
+            "mission_id": mission_id,
+        },
+    )
+
+    assert inject_response.status_code == 200
+
+    inject_body = inject_response.json()
+
+    assert inject_body["mission_id"] == mission_id
+    assert inject_body["signal_status"] == "LOST"
+
+    profile_response = client.get(f"/communication-profiles/{mission_id}")
+
+    assert profile_response.status_code == 200
+
+    assert profile_response.json()["signal_status"] == "LOST"
+
+    clear_response = client.delete(f"/faults/communication-loss/{mission_id}")
+
+    assert clear_response.status_code == 200
+
+    clear_body = clear_response.json()
+
+    assert clear_body["mission_id"] == mission_id
+    assert clear_body["signal_status"] == "AVAILABLE"
+
+
+def test_communication_fault_for_unknown_mission_returns_404(
+    client: TestClient,
+) -> None:
+    mission_id = str(uuid4())
+
+    response = client.post(
+        "/faults/communication-loss",
+        json={
+            "mission_id": mission_id,
+        },
+    )
+
+    assert response.status_code == 404
+
+    assert response.json()["error"]["code"] == "COMMUNICATION_PROFILE_NOT_FOUND"
