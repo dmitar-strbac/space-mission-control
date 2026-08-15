@@ -88,6 +88,14 @@ safety.abort.recommended
 
 The Telemetry & Safety Service only recommends safety actions. Mission lifecycle changes and the complete Emergency Abort workflow remain responsibilities of their respective services.
 
+### Emergency Abort Integration
+
+The Telemetry & Safety Service detects unsafe operating conditions and may publish `safety.abort.recommended`.
+
+It does not directly abort the mission.
+
+The recommendation is consumed by the Mission Service, which starts the distributed Emergency Abort workflow. Telemetry continues monitoring the physical and resource consequences of the abort while participating services perform the required operations.
+
 ## Event-driven communication
 
 High-frequency state and telemetry events use Core NATS pub/sub:

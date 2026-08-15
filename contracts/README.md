@@ -27,6 +27,7 @@ contracts/
 ├── events/
 │   └── event-envelope.schema.json
 ├── schemas/
+│   ├── abort/
 │   ├── faults/
 │   ├── saga/
 │   └── telemetry/
@@ -47,6 +48,9 @@ Contains payload schemas used by the real-time telemetry and mission safety flow
 
 **`schemas/faults/`**
 Contains payload schemas for controlled fault injection events affecting active mission simulation and communication state.
+
+**`schemas/abort/`**
+Contains payload schemas for the distributed Emergency Abort workflow, including mission abort requests, abort command lifecycle events, safe-return planning, simulation abort completion and workflow failures.
 
 ---
 
@@ -117,9 +121,28 @@ Fault contracts describe controlled simulation failures used to evaluate mission
 - `fault.injected`
 - `fault.cleared`
 
-Supported basic-scope faults include engine failure, propellant leak, oxygen leak, targeting error and communication loss.
+Supported basic-scope faults include engine failure, propellant leak, oxygen leak, power failure, targeting error and communication loss.
 
 Faults modify the real runtime state of the responsible service rather than generating synthetic safety alerts directly.
+
+### Emergency Abort
+
+Emergency Abort is implemented as a distributed event-driven workflow spanning the mission, communication, trajectory and flight-dynamics domains.
+
+The workflow uses:
+
+- `mission.abort.requested`
+- `command.abort.queued`
+- `command.abort.delivered`
+- `command.abort.executed`
+- `simulation.abort.started`
+- `trajectory.safe_return.created`
+- `simulation.abort.completed`
+- `abort.failed`
+
+The Mission Service coordinates the mission lifecycle, while each participating service remains responsible for its own local operation and persistence.
+
+For the current LEO scope, safe return is represented by a physically calculated retrograde `DEORBIT_BURN` that lowers the orbit toward the atmospheric entry interface rather than simulating atmospheric re-entry itself.
 
 ### Planned contracts
 

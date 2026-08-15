@@ -5,13 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.enums import (
     CheckpointReason,
+    ManeuverExecutionStatus,
     SimulationStatus,
 )
 from app.domain.exceptions import (
     InvalidSimulationTransitionError,
     SimulationAlreadyExistsError,
+    SimulationExecutionError,
 )
+from app.domain.faults import ActiveFault, FaultType
 from app.schemas.simulation import SimulationInitializeRequest
+from app.services.runtime_store import runtime_store
 from app.services.simulation_service import SimulationService
 
 
@@ -185,3 +189,76 @@ async def test_pause_creates_checkpoint(
 
     assert checkpoints[-1].reason is CheckpointReason.PAUSED
     assert checkpoints[-1].simulated_time_s == pytest.approx(2.0)
+
+
+@pytest.mark.asyncio
+async def test_begin_abort_cancels_pending_and_active_maneuvers(
+    session: AsyncSession,
+) -> None:
+    service = SimulationService(session)
+
+    request = _request()
+
+    request_with_maneuvers = SimulationInitializeRequest.model_validate(
+        {
+            **request.model_dump(),
+            "planned_maneuvers": [
+                {
+                    "id": str(uuid4()),
+                    "sequence": 1,
+                    "maneuver_type": "ORBIT_RAISE",
+                    "delta_v_m_s": 100.0,
+                    "planned_offset_s": 0.0,
+                },
+                {
+                    "id": str(uuid4()),
+                    "sequence": 2,
+                    "maneuver_type": "DEORBIT_BURN",
+                    "delta_v_m_s": 50.0,
+                    "planned_offset_s": 120.0,
+                },
+            ],
+        }
+    )
+
+    await service.initialize(request_with_maneuvers)
+
+    _, runtime = await service.begin_abort(request_with_maneuvers.mission_id)
+
+    assert len(runtime.maneuvers) == 2
+
+    assert all(
+        maneuver.status is ManeuverExecutionStatus.CANCELLED for maneuver in runtime.maneuvers
+    )
+
+    assert all(maneuver.remaining_burn_s is None for maneuver in runtime.maneuvers)
+
+
+@pytest.mark.asyncio
+async def test_abort_maneuver_is_rejected_when_engine_is_unavailable(
+    session: AsyncSession,
+) -> None:
+    service = SimulationService(session)
+
+    request = _request()
+
+    await service.initialize(request)
+
+    runtime = runtime_store.get(request.mission_id)
+
+    assert runtime is not None
+
+    runtime.active_faults[FaultType.ENGINE_FAILURE] = ActiveFault(
+        fault_type=FaultType.ENGINE_FAILURE,
+        magnitude=1.0,
+    )
+
+    with pytest.raises(
+        SimulationExecutionError,
+        match="engine thrust is unavailable",
+    ):
+        await service.execute_abort_maneuver(
+            request.mission_id,
+            maneuver_id=uuid4(),
+            delta_v_m_s=100.0,
+        )

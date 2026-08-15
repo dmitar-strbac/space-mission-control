@@ -62,6 +62,32 @@ Every command status change is persisted in an append-only audit log.
 alembic upgrade head
 ```
 
+## Emergency Abort Command Delivery
+
+Emergency Abort commands use the same communication model and command lifecycle as normal spacecraft commands.
+
+```text
+mission.abort.requested
+        ↓
+EMERGENCY_ABORT
+        ↓
+     CREATED
+        ↓
+     QUEUED
+        ↓
+    IN_TRANSIT
+        ↓
+    DELIVERED
+        ↓
+     EXECUTED
+        ↓
+command.abort.executed
+```
+
+The command remains subject to the mission communication profile, including physical propagation delay and configured network latency.
+
+This ensures that Emergency Abort does not bypass the communication model of the simulation.
+
 ## Tests
 
 ```bash

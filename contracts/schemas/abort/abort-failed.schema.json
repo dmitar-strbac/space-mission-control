@@ -1,30 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "fault-cleared.schema.json",
-  "title": "Fault Cleared",
+  "$id": "abort-failed.schema.json",
+  "title": "Emergency Abort Failed",
   "type": "object",
   "required": [
     "mission_id",
-    "fault_type",
-    "affected_service"
+    "failed_service",
+    "reason"
   ],
   "properties": {
     "mission_id": {
       "type": "string",
       "format": "uuid"
     },
-    "fault_type": {
+    "failed_service": {
       "type": "string",
-      "enum": [
-        "ENGINE_FAILURE",
-        "PROPELLANT_LEAK",
-        "OXYGEN_LEAK",
-        "POWER_FAILURE",
-        "TARGETING_ERROR",
-        "COMMUNICATION_LOSS"
-      ]
+      "minLength": 1
     },
-    "affected_service": {
+    "reason": {
       "type": "string",
       "minLength": 1
     }

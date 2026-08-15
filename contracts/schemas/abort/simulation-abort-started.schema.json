@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "simulation-abort-started.schema.json",
+  "title": "Simulation Abort Started",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "simulation_session_id",
+    "state_vector",
+    "engine_specific_impulse_s"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "simulation_session_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "state_vector": {
+      "type": "object"
+    },
+    "engine_specific_impulse_s": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  },
+  "additionalProperties": false
+}

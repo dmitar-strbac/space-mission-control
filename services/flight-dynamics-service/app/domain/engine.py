@@ -331,10 +331,17 @@ def _consume_operational_resources(
         0.0,
     )
 
-    battery_consumed_kwh = configuration.power_consumption_kw * time_step_s / 3600.0
+    power_consumption_kw = configuration.power_consumption_kw
+
+    power_fault = runtime.active_faults.get(FaultType.POWER_FAILURE)
+
+    if power_fault is not None:
+        power_consumption_kw += power_fault.magnitude
+
+    power_consumed_kwh = power_consumption_kw * time_step_s / 3600.0
 
     runtime.battery_kwh = max(
-        runtime.battery_kwh - battery_consumed_kwh,
+        runtime.battery_kwh - power_consumed_kwh,
         0.0,
     )
 

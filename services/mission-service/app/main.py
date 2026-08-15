@@ -11,6 +11,7 @@ from app.api.routes.missions import router as missions_router
 from app.core.config import get_settings
 from app.core.database import engine
 from app.core.logging import configure_logging
+from app.messaging.abort_handlers import register_abort_handlers
 from app.messaging.publisher import event_bus
 from app.messaging.saga_handlers import register_saga_handlers
 from app.services.saga_timeout_monitor import run_saga_timeout_monitor
@@ -35,6 +36,7 @@ async def lifespan(
         await event_bus.connect()
 
         await register_saga_handlers(event_bus)
+        await register_abort_handlers(event_bus)
 
         timeout_task = asyncio.create_task(run_saga_timeout_monitor())
 

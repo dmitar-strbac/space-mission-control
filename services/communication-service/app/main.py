@@ -12,6 +12,7 @@ from app.api.routes.health import router as health_router
 from app.core.config import get_settings
 from app.core.database import engine
 from app.core.logging import configure_logging
+from app.messaging.abort_worker import register_abort_worker
 from app.messaging.publisher import event_bus
 from app.messaging.saga_worker import register_communication_saga_worker
 
@@ -35,6 +36,8 @@ async def lifespan(
         await event_bus.connect()
 
         await register_communication_saga_worker(event_bus)
+
+        await register_abort_worker(event_bus)
 
     yield
 

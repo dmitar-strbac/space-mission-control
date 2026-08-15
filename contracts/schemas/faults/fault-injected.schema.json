@@ -20,6 +20,7 @@
         "ENGINE_FAILURE",
         "PROPELLANT_LEAK",
         "OXYGEN_LEAK",
+        "POWER_FAILURE",
         "TARGETING_ERROR",
         "COMMUNICATION_LOSS"
       ]

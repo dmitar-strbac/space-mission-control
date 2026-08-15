@@ -11,6 +11,7 @@ from app.domain.engine import (
 from app.domain.enums import (
     CheckpointReason,
     ManeuverExecutionStatus,
+    ManeuverType,
     SimulationStatus,
 )
 from app.domain.exceptions import (
@@ -20,6 +21,7 @@ from app.domain.exceptions import (
     SimulationNotFoundError,
     SimulationStateUnavailableError,
 )
+from app.domain.faults import FaultType
 from app.domain.runtime import (
     RuntimeManeuver,
     SimulationRuntime,
@@ -28,23 +30,19 @@ from app.domain.simulation import (
     can_transition,
     validate_simulation_speed,
 )
-from app.models.simulation_checkpoint import (
-    SimulationCheckpoint,
-)
-from app.models.simulation_session import (
-    SimulationSession,
-)
-from app.repositories.simulation_repository import (
-    SimulationRepository,
-)
-from app.schemas.simulation import (
-    SimulationInitializeRequest,
-)
+from app.models.simulation_checkpoint import SimulationCheckpoint
+from app.models.simulation_session import SimulationSession
+from app.repositories.simulation_repository import SimulationRepository
+from app.schemas.simulation import SimulationInitializeRequest
 from app.services.runtime_store import runtime_store
 from orbital_mechanics.models import (
     EngineParameters,
     StateVector,
     Vector2D,
+)
+from orbital_mechanics.propulsion import (
+    mass_flow_rate_kg_s,
+    required_propellant_mass_kg,
 )
 
 
@@ -356,6 +354,129 @@ class SimulationService:
         await self._repository.delete_session(simulation)
 
         await self._session.commit()
+
+    async def begin_abort(
+        self,
+        mission_id: UUID,
+    ) -> tuple[
+        SimulationSession,
+        SimulationRuntime,
+    ]:
+        simulation = await self.get(mission_id)
+
+        runtime = self._get_runtime(mission_id)
+
+        for maneuver in runtime.maneuvers:
+            if maneuver.status in {
+                ManeuverExecutionStatus.PENDING,
+                ManeuverExecutionStatus.ACTIVE,
+            }:
+                maneuver.status = ManeuverExecutionStatus.CANCELLED
+                maneuver.remaining_burn_s = None
+
+        return simulation, runtime
+
+    async def execute_abort_maneuver(
+        self,
+        mission_id: UUID,
+        *,
+        maneuver_id: UUID,
+        delta_v_m_s: float,
+    ) -> SimulationRuntime:
+        simulation = await self.get(mission_id)
+
+        runtime = self._get_runtime(mission_id)
+
+        engine_fault = runtime.active_faults.get(FaultType.ENGINE_FAILURE)
+
+        if engine_fault is not None and engine_fault.magnitude >= 1.0:
+            raise SimulationExecutionError(
+                (
+                    "Emergency deorbit maneuver cannot "
+                    "be executed because engine thrust "
+                    "is unavailable."
+                ),
+                details={
+                    "mission_id": str(mission_id),
+                },
+            )
+
+        maneuver = RuntimeManeuver(
+            id=maneuver_id,
+            sequence=1,
+            maneuver_type=ManeuverType.DEORBIT_BURN,
+            delta_v_m_s=delta_v_m_s,
+            planned_offset_s=(runtime.state.elapsed_time_s),
+        )
+
+        runtime.maneuvers.append(maneuver)
+
+        configuration = SimulationConfiguration(
+            engine=EngineParameters(
+                thrust_n=simulation.engine_thrust_n,
+                specific_impulse_s=(simulation.engine_specific_impulse_s),
+            ),
+            integration_step_s=(simulation.integration_step_s),
+            oxygen_consumption_rate_kg_s=(simulation.oxygen_consumption_rate_kg_s),
+            power_consumption_kw=(simulation.power_consumption_kw),
+        )
+
+        required_propellant_kg = required_propellant_mass_kg(
+            total_mass_kg=(runtime.state.total_mass_kg),
+            required_delta_v_m_s=(delta_v_m_s),
+            specific_impulse_s=(simulation.engine_specific_impulse_s),
+        )
+
+        if required_propellant_kg > runtime.state.propellant_mass_kg:
+            raise SimulationExecutionError(
+                ("Emergency deorbit maneuver requires more propellant than remains available."),
+                details={
+                    "mission_id": str(mission_id),
+                    "required_propellant_kg": (required_propellant_kg),
+                    "available_propellant_kg": (runtime.state.propellant_mass_kg),
+                },
+            )
+
+        mass_flow_kg_s = mass_flow_rate_kg_s(engine=configuration.engine)
+
+        burn_duration_s = required_propellant_kg / mass_flow_kg_s
+
+        try:
+            advance_runtime(
+                runtime=runtime,
+                configuration=configuration,
+                simulated_duration_s=(burn_duration_s),
+            )
+        except ValueError as error:
+            raise SimulationExecutionError(
+                str(error),
+                details={
+                    "mission_id": str(mission_id),
+                },
+            ) from error
+
+        if maneuver.status is not ManeuverExecutionStatus.COMPLETED:
+            raise SimulationExecutionError(
+                ("Emergency deorbit maneuver did not complete successfully."),
+                details={
+                    "mission_id": str(mission_id),
+                    "maneuver_id": str(maneuver.id),
+                },
+            )
+
+        simulation.status = SimulationStatus.COMPLETED
+        simulation.completed_at = datetime.now(UTC)
+
+        self._add_checkpoint(
+            simulation=simulation,
+            runtime=runtime,
+            reason=CheckpointReason.COMPLETED,
+        )
+
+        await self._session.commit()
+        await self._session.refresh(simulation)
+
+        return runtime
 
 
 def _create_runtime(

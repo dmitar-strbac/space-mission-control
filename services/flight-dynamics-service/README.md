@@ -53,6 +53,34 @@ Trajectory generation and maneuver planning are handled by the Trajectory Servic
 alembic upgrade head
 ```
 
+## Fault Injection
+
+Active simulation faults modify the real runtime state used by the physical simulation.
+
+Supported basic-scope faults include:
+
+- engine thrust loss;
+- propellant leak;
+- oxygen leak;
+- electrical power failure;
+- targeting error.
+
+Fault effects are applied directly during simulation propagation. Telemetry and safety alerts therefore observe the resulting physical or resource changes rather than synthetic fault values.
+
+## Emergency Abort Execution
+
+When an Emergency Abort command reaches the spacecraft simulation, Flight Dynamics:
+
+1. cancels pending and active nominal maneuvers;
+2. exposes the current physical state for emergency trajectory planning;
+3. receives the validated `DEORBIT_BURN`;
+4. verifies remaining propellant and engine availability;
+5. executes the maneuver using the normal propulsion and mass-consumption model;
+6. creates a final checkpoint;
+7. publishes `simulation.abort.completed`.
+
+If the maneuver cannot be physically executed, the service publishes an abort failure instead of forcing the mission into a successful state.
+
 ## Tests
 
 ```bash

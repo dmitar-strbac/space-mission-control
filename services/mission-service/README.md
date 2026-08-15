@@ -31,6 +31,29 @@ The Mission Service is responsible for mission definitions, lifecycle management
 alembic upgrade head
 ```
 
+## Emergency Abort
+
+The Mission Service coordinates the Emergency Abort lifecycle without directly executing physical abort operations.
+
+An abort can originate from:
+
+- an operator request through `POST /missions/{mission_id}/abort`;
+- a `safety.abort.recommended` event produced by the Telemetry & Safety Service.
+
+The mission transitions to `ABORTING` before the distributed workflow begins.
+
+```text
+IN_PROGRESS
+    ↓
+ABORTING
+    ↓
+ABORTED | FAILED
+```
+
+The Mission Service publishes `mission.abort.requested` and waits for the participating services to complete the physical abort workflow.
+
+A successful `simulation.abort.completed` event transitions the mission to `ABORTED`. An `abort.failed` event transitions an active abort workflow to `FAILED` with the reported failure reason.
+
 ## Tests
 
 ```bash

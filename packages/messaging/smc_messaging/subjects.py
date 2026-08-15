@@ -62,6 +62,22 @@ class SafetySubject(StrEnum):
     ABORT_RECOMMENDED = "safety.abort.recommended"
 
 
+class AbortSubject(StrEnum):
+    MISSION_ABORT_REQUESTED = "mission.abort.requested"
+
+    COMMAND_ABORT_QUEUED = "command.abort.queued"
+    COMMAND_ABORT_DELIVERED = "command.abort.delivered"
+    COMMAND_ABORT_EXECUTED = "command.abort.executed"
+
+    SIMULATION_ABORT_STARTED = "simulation.abort.started"
+
+    TRAJECTORY_SAFE_RETURN_CREATED = "trajectory.safe_return.created"
+
+    SIMULATION_ABORT_COMPLETED = "simulation.abort.completed"
+
+    ABORT_FAILED = "abort.failed"
+
+
 WORKFLOW_STREAM_NAME = "SMC_WORKFLOWS"
 
 WORKFLOW_STREAM_SUBJECTS = [
@@ -71,7 +87,9 @@ WORKFLOW_STREAM_SUBJECTS = [
     "resources.>",
     "communication.>",
     "simulation.>",
+    "command.>",
     "telemetry.alert.created",
     "safety.>",
     "fault.>",
+    "abort.>",
 ]
