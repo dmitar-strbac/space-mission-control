@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "abort-failed.schema.json",
+  "title": "Emergency Abort Failed",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "failed_service",
+    "reason"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "failed_service": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

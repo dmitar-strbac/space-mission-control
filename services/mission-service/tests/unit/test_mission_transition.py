@@ -12,3 +12,24 @@ def test_draft_cannot_launch() -> None:
 
 def test_terminal_status_cannot_transition() -> None:
     assert not can_transition(MissionStatus.COMPLETED, MissionStatus.ABORTING)
+
+
+def test_in_progress_mission_can_enter_aborting_state() -> None:
+    assert can_transition(
+        MissionStatus.IN_PROGRESS,
+        MissionStatus.ABORTING,
+    )
+
+
+def test_aborting_mission_can_complete_as_aborted() -> None:
+    assert can_transition(
+        MissionStatus.ABORTING,
+        MissionStatus.ABORTED,
+    )
+
+
+def test_aborting_mission_can_fail() -> None:
+    assert can_transition(
+        MissionStatus.ABORTING,
+        MissionStatus.FAILED,
+    )

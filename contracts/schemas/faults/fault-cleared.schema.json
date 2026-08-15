@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fault-cleared.schema.json",
+  "title": "Fault Cleared",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "fault_type",
+    "affected_service"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "fault_type": {
+      "type": "string",
+      "enum": [
+        "ENGINE_FAILURE",
+        "PROPELLANT_LEAK",
+        "OXYGEN_LEAK",
+        "POWER_FAILURE",
+        "TARGETING_ERROR",
+        "COMMUNICATION_LOSS"
+      ]
+    },
+    "affected_service": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

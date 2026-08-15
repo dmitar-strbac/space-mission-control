@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fault-injected.schema.json",
+  "title": "Fault Injected",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "fault_type",
+    "magnitude",
+    "affected_service"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "fault_type": {
+      "type": "string",
+      "enum": [
+        "ENGINE_FAILURE",
+        "PROPELLANT_LEAK",
+        "OXYGEN_LEAK",
+        "POWER_FAILURE",
+        "TARGETING_ERROR",
+        "COMMUNICATION_LOSS"
+      ]
+    },
+    "magnitude": {
+      "type": "number",
+      "minimum": 0
+    },
+    "affected_service": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

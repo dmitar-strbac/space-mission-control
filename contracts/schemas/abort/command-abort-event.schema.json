@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "command-abort-event.schema.json",
+  "title": "Abort Command Lifecycle Event",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "command_id"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "command_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "one_way_delay_ms": {
+      "type": "number",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

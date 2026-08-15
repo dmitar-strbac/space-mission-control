@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "trajectory-safe-return-created.schema.json",
+  "title": "Trajectory Safe Return Created",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "trajectory_plan_id",
+    "required_delta_v_m_s",
+    "estimated_propellant_kg",
+    "maneuver"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "trajectory_plan_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "required_delta_v_m_s": {
+      "type": "number",
+      "minimum": 0
+    },
+    "estimated_propellant_kg": {
+      "type": "number",
+      "minimum": 0
+    },
+    "maneuver": {
+      "type": "object",
+      "required": [
+        "id",
+        "maneuver_type",
+        "delta_v_m_s"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "maneuver_type": {
+          "const": "DEORBIT_BURN"
+        },
+        "delta_v_m_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

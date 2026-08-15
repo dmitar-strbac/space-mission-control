@@ -21,6 +21,7 @@ class ManeuverExecutionStatus(StrEnum):
     PENDING = "PENDING"
     ACTIVE = "ACTIVE"
     COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
     FAILED = "FAILED"
 
 

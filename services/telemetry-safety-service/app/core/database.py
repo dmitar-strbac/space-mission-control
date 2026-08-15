@@ -14,7 +14,7 @@ def get_mongo_client() -> AsyncMongoClient[dict[str, Any]]:
     global mongo_client
 
     if mongo_client is None:
-        mongo_client = AsyncMongoClient(settings.mongodb_url)
+        mongo_client = AsyncMongoClient(settings.database_url)
 
     return mongo_client
 
@@ -22,7 +22,7 @@ def get_mongo_client() -> AsyncMongoClient[dict[str, Any]]:
 def get_database() -> AsyncDatabase[dict[str, Any]]:
     client = get_mongo_client()
 
-    return client[settings.mongodb_database_name]
+    return client[settings.database_name]
 
 
 async def initialize_database() -> None:

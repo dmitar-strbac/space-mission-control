@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 from app.domain.enums import (
@@ -12,6 +13,9 @@ from orbital_mechanics.propulsion import (
     available_delta_v_m_s,
     required_propellant_mass_kg,
 )
+
+EARTH_RADIUS_M = 6_371_000.0
+DEFAULT_ENTRY_INTERFACE_ALTITUDE_M = 120_000.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +39,20 @@ class TrajectoryCalculationResult:
     window_status: LaunchWindowStatus
     warnings: tuple[str, ...]
     maneuvers: tuple[PlannedManeuverData, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class DeorbitCalculationResult:
+    feasible: bool
+
+    required_delta_v_m_s: float
+    estimated_propellant_kg: float
+
+    propellant_reserve_percent: float
+
+    transfer_time_s: float
+
+    maneuver: PlannedManeuverData
 
 
 def calculate_leo_trajectory(
@@ -132,6 +150,68 @@ def calculate_leo_trajectory(
         window_status=window_status,
         warnings=tuple(warnings),
         maneuvers=maneuvers,
+    )
+
+
+def calculate_leo_deorbit(
+    *,
+    position_x_m: float,
+    position_y_m: float,
+    total_mass_kg: float,
+    available_propellant_kg: float,
+    engine_specific_impulse_s: float,
+    entry_interface_altitude_m: float = (DEFAULT_ENTRY_INTERFACE_ALTITUDE_M),
+) -> DeorbitCalculationResult:
+    current_radius_m = math.hypot(
+        position_x_m,
+        position_y_m,
+    )
+
+    current_altitude_m = current_radius_m - EARTH_RADIUS_M
+
+    if current_altitude_m <= entry_interface_altitude_m:
+        raise ValueError("Spacecraft is already at or below the atmospheric entry interface.")
+
+    entry_radius_m = orbital_radius_from_altitude(entry_interface_altitude_m)
+
+    transfer = hohmann_transfer(
+        initial_orbital_radius_m=(current_radius_m),
+        target_orbital_radius_m=(entry_radius_m),
+    )
+
+    required_delta_v_m_s = abs(transfer.departure_delta_v_m_s)
+
+    estimated_propellant_kg = required_propellant_mass_kg(
+        total_mass_kg=total_mass_kg,
+        required_delta_v_m_s=(required_delta_v_m_s),
+        specific_impulse_s=(engine_specific_impulse_s),
+    )
+
+    feasible = estimated_propellant_kg <= available_propellant_kg
+
+    remaining_propellant_kg = max(
+        available_propellant_kg - estimated_propellant_kg,
+        0.0,
+    )
+
+    reserve_percent = (
+        remaining_propellant_kg / available_propellant_kg * 100.0
+        if available_propellant_kg > 0.0
+        else 0.0
+    )
+
+    return DeorbitCalculationResult(
+        feasible=feasible,
+        required_delta_v_m_s=(required_delta_v_m_s),
+        estimated_propellant_kg=(estimated_propellant_kg),
+        propellant_reserve_percent=(reserve_percent),
+        transfer_time_s=(transfer.transfer_time_s),
+        maneuver=PlannedManeuverData(
+            sequence=1,
+            maneuver_type=(ManeuverType.DEORBIT_BURN),
+            delta_v_m_s=(required_delta_v_m_s),
+            planned_offset_s=0.0,
+        ),
     )
 
 

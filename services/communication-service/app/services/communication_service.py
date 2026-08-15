@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domain.communication import (
     validate_packet_loss_percent,
 )
+from app.domain.enums import SignalStatus
 from app.domain.exceptions import (
     CommunicationProfileAlreadyExistsError,
     CommunicationProfileNotFoundError,
@@ -109,3 +110,41 @@ class CommunicationService:
         await self._repository.delete(profile)
 
         await self._session.commit()
+
+    async def inject_communication_loss(
+        self,
+        mission_id: UUID,
+    ) -> CommunicationProfile:
+        profile = await self._repository.get_by_mission_id(
+            mission_id,
+            for_update=True,
+        )
+
+        if profile is None:
+            raise CommunicationProfileNotFoundError(mission_id)
+
+        profile.signal_status = SignalStatus.LOST
+
+        await self._session.commit()
+        await self._session.refresh(profile)
+
+        return profile
+
+    async def restore_communication(
+        self,
+        mission_id: UUID,
+    ) -> CommunicationProfile:
+        profile = await self._repository.get_by_mission_id(
+            mission_id,
+            for_update=True,
+        )
+
+        if profile is None:
+            raise CommunicationProfileNotFoundError(mission_id)
+
+        profile.signal_status = SignalStatus.AVAILABLE
+
+        await self._session.commit()
+        await self._session.refresh(profile)
+
+        return profile

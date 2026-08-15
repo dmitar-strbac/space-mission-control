@@ -70,6 +70,31 @@ class MissionService:
             MissionEventType.ABORT_REQUESTED,
         )
 
+    async def complete_abort(
+        self,
+        mission_id: UUID,
+    ) -> Mission:
+        return await self._transition(
+            mission_id,
+            MissionStatus.ABORTED,
+            MissionEventType.MISSION_ABORTED,
+            completed_at=datetime.now(UTC),
+        )
+
+    async def fail_abort(
+        self,
+        mission_id: UUID,
+        *,
+        reason: str,
+    ) -> Mission:
+        return await self._transition(
+            mission_id,
+            MissionStatus.FAILED,
+            MissionEventType.MISSION_FAILED,
+            completed_at=datetime.now(UTC),
+            failure_reason=reason,
+        )
+
     async def timeline(self, mission_id: UUID) -> Sequence[MissionEvent]:
         await self.get(mission_id)
         return await self._repository.timeline(mission_id)

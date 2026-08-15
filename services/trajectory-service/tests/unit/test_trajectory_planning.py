@@ -4,7 +4,11 @@ from app.domain.enums import (
     LaunchWindowStatus,
     ManeuverType,
 )
-from app.domain.planning import calculate_leo_trajectory
+from app.domain.planning import (
+    EARTH_RADIUS_M,
+    calculate_leo_deorbit,
+    calculate_leo_trajectory,
+)
 
 
 def test_orbit_raise_produces_two_maneuvers() -> None:
@@ -94,3 +98,50 @@ def test_planning_result_is_deterministic() -> None:
     second = calculate_leo_trajectory(**arguments)
 
     assert first == second
+
+
+def test_leo_deorbit_generates_retrograde_burn() -> None:
+    result = calculate_leo_deorbit(
+        position_x_m=(EARTH_RADIUS_M + 400_000.0),
+        position_y_m=0.0,
+        total_mass_kg=10_000.0,
+        available_propellant_kg=2_000.0,
+        engine_specific_impulse_s=320.0,
+    )
+
+    assert result.feasible is True
+    assert result.required_delta_v_m_s > 0.0
+
+    assert result.maneuver.maneuver_type is ManeuverType.DEORBIT_BURN
+
+    assert result.maneuver.delta_v_m_s == pytest.approx(result.required_delta_v_m_s)
+
+    assert result.estimated_propellant_kg > 0.0
+
+
+def test_leo_deorbit_rejects_state_below_entry_interface() -> None:
+    with pytest.raises(
+        ValueError,
+        match="already at or below",
+    ):
+        calculate_leo_deorbit(
+            position_x_m=(EARTH_RADIUS_M + 100_000.0),
+            position_y_m=0.0,
+            total_mass_kg=10_000.0,
+            available_propellant_kg=2_000.0,
+            engine_specific_impulse_s=320.0,
+        )
+
+
+def test_leo_deorbit_reports_insufficient_propellant() -> None:
+    result = calculate_leo_deorbit(
+        position_x_m=(EARTH_RADIUS_M + 400_000.0),
+        position_y_m=0.0,
+        total_mass_kg=10_000.0,
+        available_propellant_kg=0.01,
+        engine_specific_impulse_s=320.0,
+    )
+
+    assert result.feasible is False
+
+    assert result.estimated_propellant_kg > 0.01
