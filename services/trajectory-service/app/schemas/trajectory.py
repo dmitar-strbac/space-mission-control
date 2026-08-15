@@ -88,3 +88,25 @@ class TrajectoryPlanResponse(BaseModel):
     created_at: datetime
 
     maneuvers: list[ManeuverResponse]
+
+
+class SafeReturnPlanRequest(BaseModel):
+    mission_id: UUID
+
+    current_state_vector: StateVectorSchema
+
+    engine_specific_impulse_s: float = Field(gt=0)
+
+    departure_time: datetime
+
+    entry_interface_altitude_m: float = Field(
+        default=120_000.0,
+        gt=0,
+    )
+
+    @model_validator(mode="after")
+    def validate_departure_time(self) -> Self:
+        if self.departure_time.tzinfo is None:
+            raise ValueError("departure_time must include timezone information")
+
+        return self

@@ -14,13 +14,9 @@ from app.domain.exceptions import (
     InvalidCommandTransitionError,
 )
 from app.schemas.command import CommandCreateRequest
-from app.schemas.communication_profile import (
-    CommunicationProfileCreateRequest,
-)
+from app.schemas.communication_profile import CommunicationProfileCreateRequest
 from app.services.command_service import CommandService
-from app.services.communication_service import (
-    CommunicationService,
-)
+from app.services.communication_service import CommunicationService
 
 
 async def _create_profile(
@@ -296,3 +292,47 @@ async def test_command_can_be_rejected(
 
     assert command.status is CommandStatus.REJECTED
     assert command.rejection_reason == "Command payload failed validation."
+
+
+async def test_inject_communication_loss_sets_signal_to_lost(
+    session,
+) -> None:
+    mission_id = uuid4()
+
+    service = CommunicationService(session)
+
+    await service.create_profile(
+        CommunicationProfileCreateRequest(
+            mission_id=mission_id,
+            distance_m=400_000.0,
+            additional_latency_ms=0.0,
+            packet_loss_percent=0.0,
+            signal_status=SignalStatus.AVAILABLE,
+        )
+    )
+
+    profile = await service.inject_communication_loss(mission_id)
+
+    assert profile.signal_status is SignalStatus.LOST
+
+
+async def test_restore_communication_sets_signal_to_available(
+    session,
+) -> None:
+    mission_id = uuid4()
+
+    service = CommunicationService(session)
+
+    await service.create_profile(
+        CommunicationProfileCreateRequest(
+            mission_id=mission_id,
+            distance_m=400_000.0,
+            additional_latency_ms=0.0,
+            packet_loss_percent=0.0,
+            signal_status=SignalStatus.LOST,
+        )
+    )
+
+    profile = await service.restore_communication(mission_id)
+
+    assert profile.signal_status is SignalStatus.AVAILABLE

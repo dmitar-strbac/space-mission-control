@@ -8,9 +8,7 @@ from app.domain.communication import (
     should_lose_packet,
 )
 from app.domain.enums import SignalStatus
-from app.domain.exceptions import (
-    InvalidCommunicationProfileError,
-)
+from app.domain.exceptions import InvalidCommunicationProfileError
 
 
 def test_zero_distance_has_zero_propagation_delay() -> None:

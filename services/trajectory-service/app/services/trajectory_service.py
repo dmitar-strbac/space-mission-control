@@ -5,15 +5,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.enums import (
     ManeuverStatus,
+    ManeuverType,
     ReferenceFrame,
     TrajectoryStatus,
 )
 from app.domain.exceptions import TrajectoryPlanNotFoundError
-from app.domain.planning import calculate_leo_trajectory
+from app.domain.planning import (
+    calculate_leo_deorbit,
+    calculate_leo_trajectory,
+)
 from app.models.maneuver import Maneuver
 from app.models.trajectory_plan import TrajectoryPlan
 from app.repositories.trajectory_repository import TrajectoryRepository
-from app.schemas.trajectory import TrajectoryPlanRequest
+from app.schemas.trajectory import (
+    SafeReturnPlanRequest,
+    TrajectoryPlanRequest,
+)
 from orbital_mechanics.models import StateVector
 from orbital_mechanics.orbits import create_circular_orbit_state
 
@@ -124,6 +131,85 @@ class TrajectoryService:
             await self._session.refresh(trajectory)
 
         return trajectory
+
+    async def plan_safe_return(
+        self,
+        request: SafeReturnPlanRequest,
+    ) -> TrajectoryPlan:
+        source = request.current_state_vector
+
+        result = calculate_leo_deorbit(
+            position_x_m=source.position.x,
+            position_y_m=source.position.y,
+            total_mass_kg=source.total_mass_kg,
+            available_propellant_kg=(source.propellant_mass_kg),
+            engine_specific_impulse_s=(request.engine_specific_impulse_s),
+            entry_interface_altitude_m=(request.entry_interface_altitude_m),
+        )
+
+        if not result.feasible:
+            raise ValueError("Insufficient propellant for emergency LEO deorbit maneuver.")
+
+        existing = await self._repository.get_by_mission_id(request.mission_id)
+
+        if existing is not None and existing.status is not TrajectoryStatus.SUPERSEDED:
+            existing.status = TrajectoryStatus.SUPERSEDED
+
+            for maneuver in existing.maneuvers:
+                maneuver.status = ManeuverStatus.CANCELLED
+
+        target_state = create_circular_orbit_state(
+            altitude_m=(request.entry_interface_altitude_m),
+            total_mass_kg=(source.total_mass_kg - result.estimated_propellant_kg),
+            propellant_mass_kg=max(
+                source.propellant_mass_kg - result.estimated_propellant_kg,
+                0.0,
+            ),
+        )
+
+        trajectory = TrajectoryPlan(
+            mission_id=request.mission_id,
+            reference_frame=(ReferenceFrame.EARTH_CENTERED_INERTIAL),
+            departure_time=(request.departure_time),
+            arrival_time=(request.departure_time + timedelta(seconds=result.transfer_time_s)),
+            initial_state_vector={
+                "position": {
+                    "x": source.position.x,
+                    "y": source.position.y,
+                },
+                "velocity": {
+                    "x": source.velocity.x,
+                    "y": source.velocity.y,
+                },
+                "total_mass_kg": (source.total_mass_kg),
+                "propellant_mass_kg": (source.propellant_mass_kg),
+                "elapsed_time_s": (source.elapsed_time_s),
+            },
+            target_state_vector=(_serialize_state_vector(target_state)),
+            required_delta_v_m_s=(result.required_delta_v_m_s),
+            estimated_propellant_kg=(result.estimated_propellant_kg),
+            propellant_reserve_percent=(result.propellant_reserve_percent),
+            safety_margin_percent=(result.propellant_reserve_percent),
+            window_score=100,
+            status=TrajectoryStatus.PLANNED,
+        )
+
+        trajectory.maneuvers = [
+            Maneuver(
+                sequence=1,
+                maneuver_type=(ManeuverType.DEORBIT_BURN),
+                delta_v_m_s=(result.required_delta_v_m_s),
+                planned_offset_s=0.0,
+                status=ManeuverStatus.PLANNED,
+            )
+        ]
+
+        self._repository.add(trajectory)
+
+        await self._session.commit()
+        await self._session.refresh(trajectory)
+
+        return await self.get(request.mission_id)
 
 
 def _serialize_state_vector(

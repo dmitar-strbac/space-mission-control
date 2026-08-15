@@ -27,7 +27,10 @@ contracts/
 ├── events/
 │   └── event-envelope.schema.json
 ├── schemas/
-    └── saga/
+│   ├── abort/
+│   ├── faults/
+│   ├── saga/
+│   └── telemetry/
 └── README.md
 ```
 
@@ -35,10 +38,19 @@ contracts/
 Reserved for AsyncAPI documentation describing event channels, publishers, consumers, and message payloads.
 
 **`events/`**
-Contains shared integration-event schemas. The current event envelope defines metadata common to all asynchronous messages exchanged between services.
+Contains shared event schemas. The event envelope defines metadata common to all asynchronous messages exchanged between services.
 
-**`schemas/`**
-Reserved for reusable schema definitions and service-specific event payloads.
+**`schemas/saga/`**
+Contains payload schemas used by the distributed Prepare Mission Saga, including reservation, trajectory planning, resource validation, communication profile and simulation initialization events.
+
+**`schemas/telemetry/`**
+Contains payload schemas used by the real-time telemetry and mission safety flow, including simulation state updates, communication status updates, processed telemetry, alerts and safety recommendations.
+
+**`schemas/faults/`**
+Contains payload schemas for controlled fault injection events affecting active mission simulation and communication state.
+
+**`schemas/abort/`**
+Contains payload schemas for the distributed Emergency Abort workflow, including mission abort requests, abort command lifecycle events, safe-return planning, simulation abort completion and workflow failures.
 
 ---
 
@@ -71,18 +83,76 @@ Event contracts should evolve in a **backward-compatible** way whenever possible
 
 ---
 
-## 🛰️ Planned Event Groups
+## 🛰️ Event Groups
 
-Service-specific contracts will be introduced together with the corresponding functionality. Expected groups include:
+The currently implemented contracts are organized around the main asynchronous workflows of the platform.
+
+### Prepare Mission Saga
+
+The Saga contracts cover the distributed mission preparation workflow:
+
+- vehicle reservation and release;
+- trajectory planning and cancellation;
+- final resource validation;
+- communication profile creation and removal;
+- simulation initialization and cleanup;
+- Saga context and rejected-step information.
+
+These events are delivered through NATS JetStream because they represent durable workflow state and require reliable processing.
+
+### Telemetry and Safety
+
+The telemetry contracts cover the real-time mission monitoring flow:
+
+- `simulation.state.updated`;
+- `communication.status.updated`;
+- `telemetry.processed`;
+- `telemetry.alert.created`;
+- `safety.corrective_maneuver.recommended`;
+- `safety.return.recommended`;
+- `safety.abort.recommended`.
+
+High-frequency simulation state and processed telemetry use Core NATS pub/sub, while safety-relevant integration events use NATS JetStream.
+
+### Fault Injection
+
+Fault contracts describe controlled simulation failures used to evaluate mission safety behavior:
+
+- `fault.injected`
+- `fault.cleared`
+
+Supported basic-scope faults include engine failure, propellant leak, oxygen leak, power failure, targeting error and communication loss.
+
+Faults modify the real runtime state of the responsible service rather than generating synthetic safety alerts directly.
+
+### Emergency Abort
+
+Emergency Abort is implemented as a distributed event-driven workflow spanning the mission, communication, trajectory and flight-dynamics domains.
+
+The workflow uses:
+
+- `mission.abort.requested`
+- `command.abort.queued`
+- `command.abort.delivered`
+- `command.abort.executed`
+- `simulation.abort.started`
+- `trajectory.safe_return.created`
+- `simulation.abort.completed`
+- `abort.failed`
+
+The Mission Service coordinates the mission lifecycle, while each participating service remains responsible for its own local operation and persistence.
+
+For the current LEO scope, safe return is represented by a physically calculated retrograde `DEORBIT_BURN` that lowers the orbit toward the atmospheric entry interface rather than simulating atmospheric re-entry itself.
+
+### Planned contracts
+
+Additional contracts will be introduced together with the corresponding functionality, including:
 
 - mission lifecycle events;
-- vehicle reservation and validation events;
-- trajectory planning events;
-- simulation state and maneuver events;
-- communication and command events;
-- telemetry and safety events;
-- Saga commands and compensation events;
-- emergency abort events.
+- maneuver execution events;
+- corrective trajectory workflows;
+- fault injection events;
+- Emergency Abort workflow events.
 
 ---
 

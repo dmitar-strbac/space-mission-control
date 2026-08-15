@@ -256,3 +256,33 @@ def test_planned_maneuver_is_physically_executed(
     assert state["total_mass_kg"] < 10_000.0
 
     assert state["maneuvers"][0]["status"] == "COMPLETED"
+
+
+def test_inject_fault_for_active_simulation(
+    client: TestClient,
+) -> None:
+    payload = _payload()
+    mission_id = payload["mission_id"]
+
+    client.post(
+        "/simulations/initialize",
+        json=payload,
+    )
+
+    response = client.post(
+        "/faults/inject",
+        json={
+            "mission_id": str(mission_id),
+            "fault_type": "ENGINE_FAILURE",
+            "magnitude": 1.0,
+        },
+    )
+
+    assert response.status_code == 201
+
+    assert response.json() == {
+        "mission_id": str(mission_id),
+        "fault_type": "ENGINE_FAILURE",
+        "magnitude": 1.0,
+        "active": True,
+    }

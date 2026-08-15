@@ -11,10 +11,9 @@ from app.messaging.publisher import (
 )
 from app.schemas.mission import MissionCreate, MissionListResponse, MissionResponse
 from app.schemas.mission_event import MissionEventResponse
+from app.services.abort_workflow import AbortWorkflowService
 from app.services.mission_service import MissionService
-from app.services.prepare_mission_saga import (
-    PrepareMissionSagaService,
-)
+from app.services.prepare_mission_saga import PrepareMissionSagaService
 
 router = APIRouter(prefix="/missions", tags=["Missions"])
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
@@ -74,9 +73,23 @@ async def launch_mission(mission_id: UUID, session: SessionDependency) -> Missio
     return MissionResponse.model_validate(mission)
 
 
-@router.post("/{mission_id}/abort", response_model=MissionResponse)
-async def abort_mission(mission_id: UUID, session: SessionDependency) -> MissionResponse:
-    mission = await MissionService(session).abort(mission_id)
+@router.post(
+    "/{mission_id}/abort",
+    response_model=MissionResponse,
+)
+async def abort_mission(
+    mission_id: UUID,
+    session: SessionDependency,
+    publisher: PublisherDependency,
+) -> MissionResponse:
+    mission = await AbortWorkflowService(
+        MissionService(session),
+        publisher,
+    ).request_abort(
+        mission_id,
+        reason="Emergency Abort requested by operator.",
+    )
+
     return MissionResponse.model_validate(mission)
 
 

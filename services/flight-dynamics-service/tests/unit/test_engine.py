@@ -10,6 +10,10 @@ from app.domain.enums import (
     ManeuverExecutionStatus,
     ManeuverType,
 )
+from app.domain.faults import (
+    ActiveFault,
+    FaultType,
+)
 from app.domain.runtime import (
     RuntimeManeuver,
     SimulationRuntime,
@@ -203,3 +207,31 @@ def test_advance_uses_fixed_integration_steps() -> None:
     )
 
     assert runtime.state.elapsed_time_s == pytest.approx(2.5)
+
+
+def test_power_failure_increases_battery_consumption() -> None:
+    runtime = _runtime()
+
+    runtime.active_faults[FaultType.POWER_FAILURE] = ActiveFault(
+        fault_type=FaultType.POWER_FAILURE,
+        magnitude=5.0,
+    )
+
+    configuration = _configuration()
+
+    initial_battery = runtime.battery_kwh
+
+    advance_runtime(
+        runtime=runtime,
+        configuration=configuration,
+        simulated_duration_s=3600.0,
+    )
+
+    expected_consumption_kwh = configuration.power_consumption_kw + 5.0
+
+    assert runtime.battery_kwh == pytest.approx(
+        max(
+            initial_battery - expected_consumption_kwh,
+            0.0,
+        )
+    )

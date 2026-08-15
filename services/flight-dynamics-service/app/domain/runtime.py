@@ -5,6 +5,7 @@ from app.domain.enums import (
     ManeuverExecutionStatus,
     ManeuverType,
 )
+from app.domain.faults import ActiveFault, FaultType
 from orbital_mechanics.models import StateVector, Vector2D
 
 
@@ -30,5 +31,7 @@ class SimulationRuntime:
     battery_kwh: float
 
     maneuvers: list[RuntimeManeuver] = field(default_factory=list)
+
+    active_faults: dict[FaultType, ActiveFault] = field(default_factory=dict)
 
     last_checkpoint_time_s: float = 0.0

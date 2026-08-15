@@ -87,6 +87,7 @@ The platform is organized as a distributed microservice system.
 - FastAPI
 - SQLAlchemy
 - Alembic
+- PyMongo
 
 ### ⚛️ Frontend
 
@@ -204,9 +205,9 @@ docker compose up --build
 
 ## 🗺️ Roadmap
 
-The project has completed the **Core Mission Simulation** and **Mission Preparation Saga** milestones, establishing the main backend services and distributed workflow required for Low Earth Orbit (LEO) mission preparation and simulation.
+The project has completed the **Core Mission Simulation**, **Distributed Mission Preparation**, and **Telemetry & Mission Safety** backend milestones, providing the main domain services required for planning, preparing, simulating and safely aborting Low Earth Orbit (LEO) missions.
 
-The roadmap below outlines the remaining implementation order and overall project progression.
+The roadmap below outlines the remaining gateway, frontend and final integration work.
 
 - [x] Project architecture
 - [x] Repository initialization
@@ -215,20 +216,18 @@ The roadmap below outlines the remaining implementation order and overall projec
 - [x] Vehicle Service
 - [x] Trajectory Service
 - [x] Flight Dynamics Service
-- [ ] Telemetry & Safety Service
+- [x] Telemetry & Safety Service
 - [x] Communication Service
 - [ ] API Gateway
 - [ ] React frontend
 - [x] Prepare Mission Saga
-- [ ] Real-time telemetry
-- [ ] Emergency Abort workflow
+- [x] Real-time telemetry
+- [x] Emergency Abort workflow
 - [ ] Docker deployment
 
 ---
 
-## 🔭 Planned Functionality
-
-The platform is planned to support:
+## 🔭 Project Scope
 
 - Low Earth Orbit missions
 - Orbital maneuver planning

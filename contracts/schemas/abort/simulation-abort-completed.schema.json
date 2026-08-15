@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "simulation-abort-completed.schema.json",
+  "title": "Simulation Abort Completed",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "final_state_vector"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "final_state_vector": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

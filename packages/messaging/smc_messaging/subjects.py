@@ -38,6 +38,46 @@ class SagaSubject(StrEnum):
     SIMULATION_CLEANED = "simulation.cleaned"
 
 
+class LiveSubject(StrEnum):
+    SIMULATION_STATE_UPDATED = "simulation.state.updated"
+    TELEMETRY_PROCESSED = "telemetry.processed"
+
+
+class IntegrationSubject(StrEnum):
+    COMMUNICATION_STATUS_UPDATED = "communication.status.updated"
+
+
+class FaultSubject(StrEnum):
+    FAULT_INJECTION_REQUESTED = "fault.injection.requested"
+    FAULT_INJECTED = "fault.injected"
+    FAULT_CLEARED = "fault.cleared"
+
+
+class SafetySubject(StrEnum):
+    TELEMETRY_ALERT_CREATED = "telemetry.alert.created"
+
+    CORRECTIVE_MANEUVER_RECOMMENDED = "safety.corrective_maneuver.recommended"
+
+    RETURN_RECOMMENDED = "safety.return.recommended"
+    ABORT_RECOMMENDED = "safety.abort.recommended"
+
+
+class AbortSubject(StrEnum):
+    MISSION_ABORT_REQUESTED = "mission.abort.requested"
+
+    COMMAND_ABORT_QUEUED = "command.abort.queued"
+    COMMAND_ABORT_DELIVERED = "command.abort.delivered"
+    COMMAND_ABORT_EXECUTED = "command.abort.executed"
+
+    SIMULATION_ABORT_STARTED = "simulation.abort.started"
+
+    TRAJECTORY_SAFE_RETURN_CREATED = "trajectory.safe_return.created"
+
+    SIMULATION_ABORT_COMPLETED = "simulation.abort.completed"
+
+    ABORT_FAILED = "abort.failed"
+
+
 WORKFLOW_STREAM_NAME = "SMC_WORKFLOWS"
 
 WORKFLOW_STREAM_SUBJECTS = [
@@ -47,4 +87,9 @@ WORKFLOW_STREAM_SUBJECTS = [
     "resources.>",
     "communication.>",
     "simulation.>",
+    "command.>",
+    "telemetry.alert.created",
+    "safety.>",
+    "fault.>",
+    "abort.>",
 ]
