@@ -218,7 +218,7 @@ The roadmap below outlines the remaining gateway, frontend and final integration
 - [x] Flight Dynamics Service
 - [x] Telemetry & Safety Service
 - [x] Communication Service
-- [ ] API Gateway
+- [x] API Gateway
 - [ ] React frontend
 - [x] Prepare Mission Saga
 - [x] Real-time telemetry

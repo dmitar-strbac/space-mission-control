@@ -2,6 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $testTargets = @(
     "packages/orbital-mechanics",
+    "services/api-gateway",
     "services/mission-service",
     "services/vehicle-service",
     "services/trajectory-service",

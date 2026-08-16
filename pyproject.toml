@@ -21,6 +21,7 @@ package = false
 members = [
     "packages/orbital-mechanics",
     "packages/messaging",
+    "services/api-gateway",
     "services/mission-service",
     "services/vehicle-service",
     "services/trajectory-service",
