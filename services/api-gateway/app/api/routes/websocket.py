@@ -8,6 +8,10 @@ from fastapi import (
 from websockets import connect
 from websockets.exceptions import WebSocketException
 
+from app.auth.security import (
+    AuthenticationError,
+    decode_access_token,
+)
 from app.clients.registry import ServiceRegistry
 
 router = APIRouter(tags=["Telemetry"])
@@ -30,6 +34,24 @@ async def telemetry_websocket_proxy(
     websocket: WebSocket,
     mission_id: str,
 ) -> None:
+    token = websocket.query_params.get("token")
+
+    if token is None:
+        await websocket.close(
+            code=1008,
+            reason="Authentication required",
+        )
+        return
+
+    try:
+        decode_access_token(token)
+    except AuthenticationError:
+        await websocket.close(
+            code=1008,
+            reason="Invalid or expired access token",
+        )
+        return
+
     registry: ServiceRegistry = websocket.app.state.service_registry
 
     target = registry["telemetry"]
@@ -47,9 +69,12 @@ async def telemetry_websocket_proxy(
                     if message["type"] == "websocket.disconnect":
                         return
 
-                    if text := message.get("text"):
+                    text = message.get("text")
+                    binary = message.get("bytes")
+
+                    if text is not None:
                         await downstream.send(text)
-                    elif binary := message.get("bytes"):
+                    elif binary is not None:
                         await downstream.send(binary)
 
             async def downstream_to_client() -> None:
@@ -66,7 +91,7 @@ async def telemetry_websocket_proxy(
 
             _, pending = await asyncio.wait(
                 tasks,
-                return_when=asyncio.FIRST_COMPLETED,
+                return_when=(asyncio.FIRST_COMPLETED),
             )
 
             for task in pending:
@@ -82,5 +107,5 @@ async def telemetry_websocket_proxy(
     except (OSError, WebSocketException):
         await websocket.close(
             code=1013,
-            reason="Telemetry service unavailable",
+            reason=("Telemetry service unavailable"),
         )

@@ -3,6 +3,11 @@ from types import TracebackType
 
 from fastapi.testclient import TestClient
 
+from app.auth.models import (
+    AuthenticatedUser,
+    UserRole,
+)
+from app.auth.security import create_access_token
 from app.main import app
 
 
@@ -69,8 +74,17 @@ def test_websocket_proxy_forwards_telemetry(
         fake_connect,
     )
 
+    token = create_access_token(
+        AuthenticatedUser(
+            username="observer",
+            role=UserRole.OBSERVER,
+        )
+    )
+
     with TestClient(app) as client:
-        with client.websocket_connect("/ws/missions/mission-1/telemetry") as websocket:
+        with client.websocket_connect(
+            f"/ws/missions/mission-1/telemetry?token={token}"
+        ) as websocket:
             message = websocket.receive_text()
 
     assert message == ('{"type":"telemetry","altitude_km":400.0}')

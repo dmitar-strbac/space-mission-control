@@ -4,13 +4,36 @@ The API Gateway is the single entry point for client communication with the Spac
 
 ## Responsibilities
 
+- JWT authentication
+- Role-based authorization
 - HTTP routing to backend microservices
 - WebSocket proxying for real-time telemetry
-- Authentication and authorization
 - Response and infrastructure error normalization
 - Aggregated service health checks
 - Request timeout handling
 - Circuit breaker protection
+
+## Authentication
+
+The API Gateway authenticates frontend clients using signed JWT access tokens.
+
+Two roles are supported:
+
+- `OPERATOR` — full mission-control access, including state-changing operations
+- `OBSERVER` — read-only access to mission data and real-time telemetry
+
+Authentication endpoints:
+
+```text
+POST /auth/login
+GET /auth/me
+```
+
+All `/api/*` routes require authentication.
+
+State-changing requests require the `OPERATOR` role, while authenticated `OBSERVER` users may perform read-only requests.
+
+Real-time telemetry WebSocket connections also require a valid access token.
 
 ## Service Routing
 
