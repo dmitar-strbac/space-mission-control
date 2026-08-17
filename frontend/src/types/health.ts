@@ -1,17 +1,13 @@
 export type ServiceHealthStatus =
   | "healthy"
-  | "unhealthy"
-  | "degraded"
-  | "unknown";
+  | "unavailable";
 
 export interface ServiceHealth {
-  service: string;
-  status: ServiceHealthStatus | string;
-  circuit_breaker?: string;
-  latency_ms?: number;
-  detail?: string;
+  status: ServiceHealthStatus;
+  circuit_state: string;
 }
 
 export interface ServicesHealthResponse {
-  services: ServiceHealth[];
+  status: "healthy" | "degraded";
+  services: Record<string, ServiceHealth>;
 }

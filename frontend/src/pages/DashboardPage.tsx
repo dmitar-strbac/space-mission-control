@@ -8,9 +8,14 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { Link } from "react-router-dom";
 
 import { getServicesHealth } from "../api/healthApi";
+import { getMissions } from "../api/missionApi";
+import { MissionStatusBadge } from "../components/mission/MissionStatusBadge";
 import { useAuth } from "../hooks/useAuth";
+import { formatDateTime } from "../utils/formatters";
+import { countMissionsByStatus } from "../utils/mission";
 
 const serviceDisplayNames: Record<string, string> = {
   "mission-service": "Mission",
@@ -34,13 +39,34 @@ export function DashboardPage() {
     refetchInterval: 15_000,
   });
 
-  const services = healthData?.services ?? [];
+  const services = Object.entries(
+    healthData?.services ?? {},
+  );
 
   const healthyServices = services.filter(
-    (service) =>
-      service.status.toLowerCase() === "healthy" ||
-      service.status.toLowerCase() === "online",
+    ([, service]) => service.status === "healthy",
   ).length;
+
+  const {
+    data: missionData,
+    isLoading: missionsLoading,
+  } = useQuery({
+    queryKey: ["missions", "dashboard"],
+    queryFn: () =>
+      getMissions({
+        limit: 100,
+      }),
+  });
+
+  const missions = missionData?.items ?? [];
+
+  const recentMissions = [...missions]
+    .sort(
+      (left, right) =>
+        new Date(right.created_at).getTime() -
+        new Date(left.created_at).getTime(),
+    )
+    .slice(0, 5);
 
   return (
     <div className="dashboard-page">
@@ -67,7 +93,11 @@ export function DashboardPage() {
       <section className="stat-grid">
         <DashboardStat
           label="Total Missions"
-          value="—"
+          value={
+            missionsLoading
+              ? "—"
+              : String(missionData?.total ?? 0)
+          }
           description="Mission registry"
           icon={<Rocket size={20} />}
           index={0}
@@ -75,7 +105,16 @@ export function DashboardPage() {
 
         <DashboardStat
           label="Preparing"
-          value="—"
+          value={
+            missionsLoading
+              ? "—"
+              : String(
+                  countMissionsByStatus(
+                    missions,
+                    "PREPARING",
+                  ),
+                )
+          }
           description="Saga workflows"
           icon={<Orbit size={20} />}
           index={1}
@@ -83,7 +122,16 @@ export function DashboardPage() {
 
         <DashboardStat
           label="Ready"
-          value="—"
+          value={
+            missionsLoading
+              ? "—"
+              : String(
+                  countMissionsByStatus(
+                    missions,
+                    "READY",
+                  ),
+                )
+          }
           description="Cleared for launch"
           icon={<CircleCheck size={20} />}
           index={2}
@@ -91,7 +139,16 @@ export function DashboardPage() {
 
         <DashboardStat
           label="Active"
-          value="—"
+          value={
+            missionsLoading
+              ? "—"
+              : String(
+                  countMissionsByStatus(
+                    missions,
+                    "IN_PROGRESS",
+                  ),
+                )
+          }
           description="In simulation"
           icon={<Activity size={20} />}
           index={3}
@@ -109,16 +166,49 @@ export function DashboardPage() {
             <Satellite size={20} />
           </div>
 
-          <div className="dashboard-empty-state">
-            <Orbit size={34} />
+          {recentMissions.length === 0 ? (
+            <div className="dashboard-empty-state">
+              <Orbit size={34} />
 
-            <strong>Mission registry awaiting connection</strong>
+              <strong>No missions registered</strong>
 
-            <p>
-              Mission activity will appear here after the mission API
-              is connected in the next implementation step.
-            </p>
-          </div>
+              <p>
+                Create the first orbital mission to begin
+                planning operations.
+              </p>
+            </div>
+          ) : (
+            <div className="recent-mission-list">
+              {recentMissions.map((mission) => (
+                <Link
+                  className="recent-mission-row"
+                  key={mission.id}
+                  to={`/missions/${mission.id}`}
+                >
+                  <div className="recent-mission-identity">
+                    <div className="recent-mission-icon">
+                      <Orbit size={16} />
+                    </div>
+
+                    <div>
+                      <strong>{mission.name}</strong>
+
+                      <span>
+                        Created{" "}
+                        {formatDateTime(
+                          mission.created_at,
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  <MissionStatusBadge
+                    status={mission.status}
+                  />
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="dashboard-card">
@@ -153,16 +243,15 @@ export function DashboardPage() {
               ))}
 
             {!isLoading &&
-              services.map((service) => {
-                const normalizedStatus =
-                  service.status.toLowerCase();
-
+              services.map(([serviceName, service]) => {
                 const healthy =
-                  normalizedStatus === "healthy" ||
-                  normalizedStatus === "online";
+                  service.status === "healthy";
 
                 return (
-                  <div className="service-row" key={service.service}>
+                  <div
+                    className="service-row"
+                    key={serviceName}
+                  >
                     <div className="service-identity">
                       <span
                         className={
@@ -174,11 +263,13 @@ export function DashboardPage() {
 
                       <div>
                         <strong>
-                          {serviceDisplayNames[service.service] ??
-                            service.service}
+                          {serviceDisplayNames[serviceName] ??
+                            serviceName}
                         </strong>
 
-                        <span>{service.service}</span>
+                        <span>
+                          Circuit {service.circuit_state}
+                        </span>
                       </div>
                     </div>
 

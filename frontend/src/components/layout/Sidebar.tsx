@@ -7,6 +7,7 @@ import {
   Rocket,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 const primaryNavigation = [
   {
@@ -27,6 +28,14 @@ const primaryNavigation = [
 ];
 
 export function Sidebar() {
+  const { user } = useAuth();
+
+  const visibleNavigation = primaryNavigation.filter(
+    (item) =>
+      item.path !== "/missions/new" ||
+      user?.role === "OPERATOR",
+  );
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -45,7 +54,7 @@ export function Sidebar() {
           Mission Operations
         </span>
 
-        {primaryNavigation.map(({ label, path, icon: Icon }) => (
+        {visibleNavigation.map(({ label, path, icon: Icon }) => (
           <NavLink
             key={path}
             to={path}
