@@ -205,9 +205,14 @@ docker compose up --build
 
 ## 🗺️ Roadmap
 
-The project has completed the **Core Mission Simulation**, **Distributed Mission Preparation**, and **Telemetry & Mission Safety** backend milestones, providing the main domain services required for planning, preparing, simulating and safely aborting Low Earth Orbit (LEO) missions.
+Space Mission Control is being developed incrementally, starting with the core
+orbital simulation and progressing toward a complete distributed mission-control
+platform.
 
-The roadmap below outlines the remaining gateway, frontend and final integration work.
+The current implementation provides the full backend architecture required to
+plan, prepare, simulate, monitor and safely abort Low Earth Orbit (LEO) missions.
+Development is now focused on completing the interactive mission-control
+frontend and end-to-end system integration.
 
 - [x] Project architecture
 - [x] Repository initialization
@@ -219,11 +224,16 @@ The roadmap below outlines the remaining gateway, frontend and final integration
 - [x] Telemetry & Safety Service
 - [x] Communication Service
 - [x] API Gateway
-- [ ] React frontend
 - [x] Prepare Mission Saga
 - [x] Real-time telemetry
 - [x] Emergency Abort workflow
-- [ ] Docker deployment
+- [x] Mission management interface
+- [ ] Live mission-control dashboard
+- [ ] Mission command interface
+- [ ] Safety alerts and emergency controls
+- [ ] End-to-end integration and final UI polish
+- [ ] LEO rendezvous missions
+- [ ] Lunar mission simulation
 
 ---
 
@@ -253,7 +263,7 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 ## 👨‍💻 Author
 
-**Dmitar Štrbac**
+**[Dmitar Štrbac](https://github.com/dmitar-strbac)**
 
 Bachelor's Thesis Project
 

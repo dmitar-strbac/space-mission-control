@@ -172,6 +172,21 @@ class SagaStepService:
 
         return step.result_payload
 
+    async def get_latest_steps_for_mission(
+        self,
+        mission_id: UUID,
+    ) -> tuple[UUID | None, list[SagaStep]]:
+        saga_id = await self._repository.get_latest_saga_id_for_mission(
+            mission_id,
+        )
+
+        if saga_id is None:
+            return None, []
+
+        steps = await self.list_steps(saga_id)
+
+        return saga_id, steps
+
     async def _require_step(
         self,
         *,
