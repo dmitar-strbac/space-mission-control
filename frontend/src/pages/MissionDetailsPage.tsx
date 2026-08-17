@@ -2,7 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   CalendarClock,
+  CheckCircle2,
   Gauge,
+  LoaderCircle,
   Orbit,
   Rocket,
   Satellite,
@@ -109,15 +111,37 @@ export function MissionDetailsPage() {
           </div>
         </div>
 
-        {mission.status === "DRAFT" && (
-          <Link
-            className="primary-button page-action-button"
-            to={`/missions/${mission.id}/prepare`}
-          >
-            <Rocket size={17} />
-            Prepare Mission
-          </Link>
-        )}
+        <div className="mission-detail-actions">
+          {mission.status === "DRAFT" && (
+            <Link
+              className="primary-button page-action-button"
+              to={`/missions/${mission.id}/prepare`}
+            >
+              <Rocket size={17} />
+              Prepare Mission
+            </Link>
+          )}
+
+          {mission.status === "PREPARING" && (
+            <Link
+              className="secondary-button page-action-button"
+              to={`/missions/${mission.id}/prepare`}
+            >
+              <LoaderCircle size={17} />
+              View Preparation
+            </Link>
+          )}
+
+          {mission.status === "READY" && (
+            <Link
+              className="primary-button page-action-button"
+              to={`/missions/${mission.id}/prepare`}
+            >
+              <CheckCircle2 size={17} />
+              Review Flight Plan
+            </Link>
+          )}
+        </div>
       </section>
 
       {mission.failure_reason && (

@@ -4,6 +4,7 @@ import type {
   MissionEvent,
   MissionListResponse,
 } from "../types/mission";
+import type { MissionPreparation } from "../types/preparation";
 import { apiRequest } from "./apiClient";
 
 interface MissionListParameters {
@@ -39,6 +40,36 @@ export function createMission(
     method: "POST",
     body: JSON.stringify(request),
   });
+}
+
+export function prepareMission(
+  missionId: string,
+): Promise<Mission> {
+  return apiRequest<Mission>(
+    `/api/mission/missions/${missionId}/prepare`,
+    {
+      method: "POST",
+    },
+  );
+}
+
+export function getMissionPreparation(
+  missionId: string,
+): Promise<MissionPreparation> {
+  return apiRequest<MissionPreparation>(
+    `/api/mission/missions/${missionId}/preparation`,
+  );
+}
+
+export function launchMission(
+  missionId: string,
+): Promise<Mission> {
+  return apiRequest<Mission>(
+    `/api/mission/missions/${missionId}/launch`,
+    {
+      method: "POST",
+    },
+  );
 }
 
 export function getMissionTimeline(

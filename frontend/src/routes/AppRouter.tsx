@@ -9,6 +9,7 @@ import { DashboardPage } from "../pages/DashboardPage";
 import { LoginPage } from "../pages/LoginPage";
 import { MissionDetailsPage } from "../pages/MissionDetailsPage";
 import { MissionsPage } from "../pages/MissionsPage";
+import { PrepareMissionPage } from "../pages/PrepareMissionPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 
 export const router = createBrowserRouter([
@@ -37,6 +38,10 @@ export const router = createBrowserRouter([
           {
             path: "missions/:missionId",
             element: <MissionDetailsPage />,
+          },
+          {
+            path: "missions/:missionId/prepare",
+            element: <PrepareMissionPage />,
           },
           {
             path: "*",

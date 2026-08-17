@@ -50,7 +50,9 @@ interface MissionFormState {
   missionType: MissionType;
   crewCount: number;
   vehicleId: string;
+  initialAltitudeKm: number;
   targetAltitudeKm: number;
+  minimumPropellantReservePercent: number;
   plannedLaunchTime: string;
   simulationSpeed: number;
 }
@@ -117,7 +119,9 @@ export function CreateMissionPage() {
       missionType: "LEO",
       crewCount: 0,
       vehicleId: "",
+      initialAltitudeKm: 200,
       targetAltitudeKm: 400,
+      minimumPropellantReservePercent: 10,
       plannedLaunchTime: "",
       simulationSpeed: 60,
     });
@@ -168,8 +172,12 @@ export function CreateMissionPage() {
 
       case "FLIGHT":
         return (
+          form.initialAltitudeKm >= 160 &&
+          form.initialAltitudeKm <= 2000 &&
           form.targetAltitudeKm >= 160 &&
-          form.targetAltitudeKm <= 2000
+          form.targetAltitudeKm <= 2000 &&
+          form.minimumPropellantReservePercent >= 0 &&
+          form.minimumPropellantReservePercent < 100
         );
 
       case "OPERATIONS":
@@ -205,6 +213,16 @@ export function CreateMissionPage() {
       crew_count: form.crewCount,
       target_type: "EARTH_ORBIT",
       target_parameters: {
+        initial_altitude_m:
+          form.initialAltitudeKm * 1000,
+        target_altitude_m:
+          form.targetAltitudeKm * 1000,
+        minimum_propellant_reserve_percent:
+          form.minimumPropellantReservePercent,
+
+        // UI convenience values
+        initial_altitude_km:
+          form.initialAltitudeKm,
         target_altitude_km:
           form.targetAltitudeKm,
       },
@@ -652,11 +670,40 @@ function FlightStep({
       />
 
       <div className="flight-profile-layout">
-        <div className="form-grid">
+        <div className="flight-profile-form">
+          <label className="form-field">
+            <span>Initial Orbit Altitude</span>
+
+            <div className="flight-number-input">
+              <input
+                min={160}
+                max={2000}
+                type="number"
+                value={form.initialAltitudeKm}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    initialAltitudeKm: Number(
+                      event.target.value,
+                    ),
+                  }))
+                }
+              />
+
+              <span className="flight-input-unit">
+                KM
+              </span>
+            </div>
+
+            <small>
+              Starting Low Earth Orbit altitude.
+            </small>
+          </label>
+
           <label className="form-field">
             <span>Target Orbit Altitude</span>
 
-            <div className="form-input-unit">
+            <div className="flight-number-input">
               <input
                 min={160}
                 max={2000}
@@ -665,17 +712,51 @@ function FlightStep({
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    targetAltitudeKm:
+                    targetAltitudeKm: Number(
+                      event.target.value,
+                    ),
+                  }))
+                }
+              />
+
+              <span className="flight-input-unit">
+                KM
+              </span>
+            </div>
+
+            <small>
+              Desired final Low Earth Orbit altitude.
+            </small>
+          </label>
+
+          <label className="form-field">
+            <span>Minimum Propellant Reserve</span>
+
+            <div className="flight-number-input">
+              <input
+                min={0}
+                max={99}
+                type="number"
+                value={
+                  form.minimumPropellantReservePercent
+                }
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    minimumPropellantReservePercent:
                       Number(event.target.value),
                   }))
                 }
               />
 
-              <span>KM</span>
+              <span className="flight-input-unit">
+                %
+              </span>
             </div>
 
             <small>
-              Recommended LEO range: 200–1,000 km
+              Required remaining fuel margin after
+              planned maneuvers.
             </small>
           </label>
 
@@ -714,8 +795,14 @@ function FlightStep({
           </div>
 
           <div className="orbit-preview-data">
-            <span>Target altitude</span>
+            <span>Initial → Target altitude</span>
+
             <strong>
+              {formatNumber(
+                form.initialAltitudeKm,
+                0,
+              )}{" "}
+              →{" "}
               {formatNumber(
                 form.targetAltitudeKm,
                 0,
@@ -852,11 +939,27 @@ function ReviewStep({
           />
 
           <DossierItem
+            label="Initial Orbit"
+            value={`${formatNumber(
+              form.initialAltitudeKm,
+              0,
+            )} km`}
+          />
+
+          <DossierItem
             label="Target Orbit"
             value={`${formatNumber(
               form.targetAltitudeKm,
               0,
             )} km`}
+          />
+
+          <DossierItem
+            label="Minimum Fuel Reserve"
+            value={`${formatNumber(
+              form.minimumPropellantReservePercent,
+              0,
+            )}%`}
           />
 
           <DossierItem

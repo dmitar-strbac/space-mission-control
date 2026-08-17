@@ -14,7 +14,7 @@ export function TopBar() {
     <header className="topbar">
       <div className="topbar-system-status">
         <span className="system-status-dot" />
-        <span>System nominal</span>
+        <span>Mission Control Online</span>
       </div>
 
       <div className="topbar-actions">
