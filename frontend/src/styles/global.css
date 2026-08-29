@@ -6337,3 +6337,1105 @@ select {
       column;
   }
 }
+
+
+/* =========================================================
+   Mission Control - Orbital Visualization
+   ========================================================= */
+
+.orbital-display-card {
+  overflow: hidden;
+
+  border:
+    1px solid
+    var(--color-border);
+
+  border-radius:
+    var(--radius-lg);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        10,
+        19,
+        33,
+        0.96
+      ),
+      rgba(
+        4,
+        11,
+        21,
+        0.98
+      )
+    );
+
+  box-shadow:
+    var(--shadow-panel);
+}
+
+.orbital-display-heading {
+  display: flex;
+
+  align-items: center;
+  justify-content:
+    space-between;
+
+  gap: 18px;
+
+  padding:
+    18px 20px;
+
+  border-bottom:
+    1px solid
+    rgba(
+      125,
+      174,
+      255,
+      0.1
+    );
+}
+
+.orbital-display-heading h2 {
+  margin:
+    5px 0 0;
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    1rem;
+}
+
+.orbital-display-live {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  color:
+    var(--color-success);
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    0.64rem;
+
+  font-weight: 800;
+
+  letter-spacing:
+    0.08em;
+}
+
+.orbital-display-live i {
+  width: 7px;
+  height: 7px;
+
+  border-radius:
+    50%;
+
+  background:
+    currentColor;
+
+  box-shadow:
+    0 0 10px
+    currentColor;
+}
+
+.orbital-display-stage {
+  position: relative;
+
+  display: grid;
+
+  min-height: 600px;
+
+  place-items: center;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(
+        28,
+        91,
+        143,
+        0.1
+      ),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 25% 20%,
+      rgba(
+        76,
+        141,
+        255,
+        0.05
+      ),
+      transparent 26%
+    ),
+    linear-gradient(
+      rgba(
+        125,
+        174,
+        255,
+        0.018
+      ) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(
+        125,
+        174,
+        255,
+        0.018
+      ) 1px,
+      transparent 1px
+    ),
+    #030812;
+
+  background-size:
+    auto,
+    auto,
+    32px 32px,
+    32px 32px,
+    auto;
+}
+
+.orbital-display-stage::before {
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at 12% 17%,
+      rgba(
+        255,
+        255,
+        255,
+        0.75
+      )
+      0 1px,
+      transparent
+      1.3px
+    ),
+    radial-gradient(
+      circle at 78% 27%,
+      rgba(
+        255,
+        255,
+        255,
+        0.52
+      )
+      0 1px,
+      transparent
+      1.3px
+    ),
+    radial-gradient(
+      circle at 90% 72%,
+      rgba(
+        255,
+        255,
+        255,
+        0.62
+      )
+      0 1px,
+      transparent
+      1.3px
+    ),
+    radial-gradient(
+      circle at 22% 82%,
+      rgba(
+        255,
+        255,
+        255,
+        0.44
+      )
+      0 1px,
+      transparent
+      1.3px
+    );
+
+  content: "";
+}
+
+.orbital-display-stage svg {
+  position: relative;
+
+  z-index: 1;
+
+  width:
+    min(
+      100%,
+      640px
+    );
+
+  height: auto;
+
+  padding: 10px;
+}
+
+.orbital-coordinate-grid circle,
+.orbital-coordinate-grid line {
+  fill: none;
+
+  stroke:
+    rgba(
+      125,
+      174,
+      255,
+      0.07
+    );
+
+  stroke-width: 1;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+.orbital-coordinate-grid circle {
+  stroke-dasharray:
+    2 8;
+}
+
+.orbital-earth-atmosphere {
+  filter:
+    drop-shadow(
+      0 0 18px
+      rgba(
+        80,
+        216,
+        255,
+        0.16
+      )
+    );
+}
+
+.orbital-earth {
+  stroke:
+    rgba(
+      80,
+      216,
+      255,
+      0.34
+    );
+
+  stroke-width: 1.25;
+
+  filter:
+    drop-shadow(
+      0 0 26px
+      rgba(
+        30,
+        119,
+        192,
+        0.18
+      )
+    );
+}
+
+.orbital-earth-details path {
+  fill: none;
+
+  stroke:
+    rgba(
+      110,
+      230,
+      202,
+      0.18
+    );
+
+  stroke-linecap: round;
+
+  stroke-width: 5;
+}
+
+.orbital-earth-label {
+  fill:
+    rgba(
+      220,
+      241,
+      255,
+      0.7
+    );
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    11px;
+
+  font-weight: 700;
+
+  letter-spacing:
+    0.15em;
+}
+
+.orbital-reference-orbit {
+  fill: none;
+
+  stroke-width:
+    1.15;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+.orbital-reference-initial {
+  stroke:
+    rgba(
+      125,
+      174,
+      255,
+      0.28
+    );
+
+  stroke-dasharray:
+    4 7;
+}
+
+.orbital-reference-target {
+  stroke:
+    rgba(
+      80,
+      216,
+      255,
+      0.46
+    );
+
+  stroke-dasharray:
+    7 6;
+}
+
+.orbital-transfer-path {
+  fill: none;
+
+  stroke:
+    rgba(
+      76,
+      141,
+      255,
+      0.76
+    );
+
+  stroke-dasharray:
+    6 5;
+
+  stroke-linecap: round;
+
+  stroke-width: 2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+.orbital-actual-path {
+  fill: none;
+
+  stroke:
+    var(--color-success);
+
+  stroke-linecap:
+    round;
+
+  stroke-linejoin:
+    round;
+
+  stroke-width:
+    2.2;
+
+  vector-effect:
+    non-scaling-stroke;
+
+  filter:
+    drop-shadow(
+      0 0 4px
+      rgba(
+        70,
+        217,
+        147,
+        0.35
+      )
+    );
+}
+
+.orbital-target-point {
+  color:
+    var(--color-cyan);
+}
+
+.orbital-target-point
+  circle:first-child {
+  fill:
+    rgba(
+      80,
+      216,
+      255,
+      0.07
+    );
+
+  stroke:
+    rgba(
+      80,
+      216,
+      255,
+      0.28
+    );
+}
+
+.orbital-target-point
+  circle:nth-child(2) {
+  fill:
+    var(--color-cyan);
+}
+
+.orbital-target-point
+  svg {
+  color:
+    var(--color-cyan);
+}
+
+.orbital-maneuver-marker circle {
+  fill:
+    #091827;
+
+  stroke:
+    var(--color-caution);
+
+  stroke-width: 1.2;
+}
+
+.orbital-maneuver-marker text {
+  fill:
+    var(--color-caution);
+
+  font-family:
+    var(--font-display);
+
+  font-size: 7px;
+
+  font-weight: 800;
+}
+
+.orbital-spacecraft-live {
+  color:
+    #e6fbff;
+}
+
+.orbital-spacecraft-live circle {
+  fill:
+    rgba(
+      80,
+      216,
+      255,
+      0.13
+    );
+
+  stroke:
+    var(--color-cyan);
+
+  stroke-width: 1;
+}
+
+.orbital-spacecraft-live svg {
+  color:
+    #effdff;
+}
+
+.orbital-hud {
+  position: absolute;
+
+  z-index: 2;
+
+  display: flex;
+
+  min-width: 130px;
+
+  flex-direction:
+    column;
+
+  gap: 2px;
+
+  border:
+    1px solid
+    rgba(
+      125,
+      174,
+      255,
+      0.12
+    );
+
+  border-radius:
+    9px;
+
+  padding:
+    10px 12px;
+
+  background:
+    rgba(
+      4,
+      11,
+      21,
+      0.72
+    );
+
+  backdrop-filter:
+    blur(8px);
+}
+
+.orbital-hud-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.orbital-hud-right {
+  right: 20px;
+  bottom: 20px;
+}
+
+.orbital-hud span {
+  color:
+    var(--color-text-muted);
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    0.53rem;
+
+  font-weight: 700;
+
+  letter-spacing:
+    0.1em;
+}
+
+.orbital-hud strong {
+  font-family:
+    var(--font-display);
+
+  font-size:
+    0.8rem;
+}
+
+.orbital-hud small {
+  color:
+    var(
+      --color-text-muted
+    );
+
+  font-size:
+    0.58rem;
+}
+
+.orbital-display-footer {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  align-items: center;
+
+  gap: 16px;
+
+  padding:
+    12px 18px;
+
+  border-top:
+    1px solid
+    rgba(
+      125,
+      174,
+      255,
+      0.1
+    );
+
+  color:
+    var(
+      --color-text-secondary
+    );
+
+  font-size:
+    0.65rem;
+}
+
+.orbital-display-footer
+  > div {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap: 6px;
+}
+
+.orbit-key {
+  width: 18px;
+  height: 2px;
+
+  border-radius:
+    999px;
+}
+
+.orbit-key-initial {
+  background:
+    rgba(
+      125,
+      174,
+      255,
+      0.55
+    );
+}
+
+.orbit-key-target {
+  background:
+    var(--color-cyan);
+}
+
+.orbit-key-transfer {
+  background:
+    var(--color-primary);
+}
+
+.orbit-key-actual {
+  background:
+    var(--color-success);
+}
+
+.orbital-footer-spacer {
+  flex: 1;
+}
+
+.orbital-reference-label {
+  color:
+    var(--color-text-muted);
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    0.58rem;
+
+  letter-spacing:
+    0.06em;
+}
+
+
+/* =========================================================
+   Mission Control - Telemetry Charts
+   ========================================================= */
+
+.telemetry-history-heading {
+  margin-top: 8px;
+}
+
+.telemetry-charts-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 14px;
+}
+
+.telemetry-chart-card {
+  overflow: hidden;
+
+  border:
+    1px solid
+    var(--color-border);
+
+  border-radius:
+    var(--radius-lg);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        12,
+        22,
+        38,
+        0.92
+      ),
+      rgba(
+        6,
+        13,
+        24,
+        0.96
+      )
+    );
+
+  box-shadow:
+    0 14px 38px
+    rgba(
+      0,
+      0,
+      0,
+      0.17
+    );
+}
+
+.telemetry-chart-heading {
+  display: flex;
+
+  align-items:
+    flex-start;
+
+  justify-content:
+    space-between;
+
+  gap: 12px;
+
+  padding:
+    16px 17px 7px;
+}
+
+.telemetry-chart-heading h3 {
+  margin:
+    4px 0 0;
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    0.9rem;
+}
+
+.telemetry-chart-window {
+  border:
+    1px solid
+    rgba(
+      80,
+      216,
+      255,
+      0.13
+    );
+
+  border-radius:
+    999px;
+
+  padding:
+    4px 7px;
+
+  color:
+    var(--color-cyan);
+
+  background:
+    rgba(
+      80,
+      216,
+      255,
+      0.04
+    );
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    0.52rem;
+
+  font-weight: 700;
+
+  letter-spacing:
+    0.08em;
+}
+
+.telemetry-chart-legend {
+  display: flex;
+
+  min-height: 28px;
+
+  flex-wrap: wrap;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding:
+    0 17px;
+}
+
+.telemetry-chart-legend-item {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  gap: 5px;
+
+  color:
+    var(
+      --color-text-muted
+    );
+
+  font-size:
+    0.61rem;
+}
+
+.telemetry-chart-legend-item i {
+  width: 12px;
+  height: 2px;
+
+  border-radius:
+    999px;
+
+  background:
+    currentColor;
+}
+
+.telemetry-chart-legend-primary {
+  color:
+    var(--color-cyan);
+}
+
+.telemetry-chart-legend-secondary {
+  color:
+    var(--color-primary);
+}
+
+.telemetry-chart-legend-success {
+  color:
+    var(--color-success);
+}
+
+.telemetry-chart-legend-caution {
+  color:
+    var(--color-caution);
+}
+
+.telemetry-chart-legend-critical {
+  color:
+    var(--color-critical);
+}
+
+.telemetry-chart-visual {
+  position:
+    relative;
+
+  min-height:
+    220px;
+
+  padding:
+    4px 8px 8px;
+}
+
+.telemetry-chart-visual svg {
+  display: block;
+
+  width: 100%;
+}
+
+.telemetry-chart-empty {
+  position: absolute;
+
+  z-index: 2;
+
+  top: 50%;
+  left: 50%;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    );
+
+  color:
+    var(--color-text-muted);
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    0.66rem;
+
+  letter-spacing:
+    0.04em;
+}
+
+.telemetry-chart-grid-line {
+  stroke:
+    rgba(
+      125,
+      174,
+      255,
+      0.075
+    );
+
+  stroke-width: 1;
+}
+
+.telemetry-chart-axis {
+  stroke:
+    rgba(
+      125,
+      174,
+      255,
+      0.13
+    );
+
+  stroke-width: 1;
+}
+
+.telemetry-chart-axis-label,
+.telemetry-chart-unit {
+  fill:
+    var(--color-text-muted);
+
+  font-family:
+    var(--font-display);
+
+  font-size: 8px;
+}
+
+.telemetry-chart-line path {
+  stroke-width: 2;
+
+  vector-effect:
+    non-scaling-stroke;
+}
+
+.telemetry-chart-line-primary {
+  color:
+    var(--color-cyan);
+}
+
+.telemetry-chart-line-primary path,
+.telemetry-chart-line-primary
+  .telemetry-chart-live-point {
+  stroke:
+    var(--color-cyan);
+}
+
+.telemetry-chart-line-secondary {
+  color:
+    var(--color-primary);
+}
+
+.telemetry-chart-line-secondary path,
+.telemetry-chart-line-secondary
+  .telemetry-chart-live-point {
+  stroke:
+    var(--color-primary);
+}
+
+.telemetry-chart-line-success {
+  color:
+    var(--color-success);
+}
+
+.telemetry-chart-line-success path,
+.telemetry-chart-line-success
+  .telemetry-chart-live-point {
+  stroke:
+    var(--color-success);
+}
+
+.telemetry-chart-line-caution {
+  color:
+    var(--color-caution);
+}
+
+.telemetry-chart-line-caution path,
+.telemetry-chart-line-caution
+  .telemetry-chart-live-point {
+  stroke:
+    var(--color-caution);
+}
+
+.telemetry-chart-line-critical {
+  color:
+    var(--color-critical);
+}
+
+.telemetry-chart-line-critical path,
+.telemetry-chart-line-critical
+  .telemetry-chart-live-point {
+  stroke:
+    var(--color-critical);
+}
+
+.telemetry-chart-live-point {
+  fill:
+    var(--color-bg);
+
+  stroke-width: 2.2;
+}
+
+.telemetry-chart-live-pulse {
+  fill: currentColor;
+
+  opacity: 0.12;
+}
+
+
+/* =========================================================
+   Mission Control - responsive visualization
+   ========================================================= */
+
+@media
+  (max-width: 1000px) {
+  .telemetry-charts-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .orbital-display-stage {
+    min-height:
+      520px;
+  }
+}
+
+@media
+  (max-width: 640px) {
+  .orbital-display-heading {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+  }
+
+  .orbital-display-stage {
+    min-height:
+      430px;
+  }
+
+  .orbital-hud {
+    min-width:
+      105px;
+
+    padding:
+      7px 9px;
+  }
+
+  .orbital-hud-left {
+    bottom: 10px;
+    left: 10px;
+  }
+
+  .orbital-hud-right {
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .orbital-display-footer {
+    gap: 10px;
+  }
+
+  .orbital-footer-spacer {
+    display: none;
+  }
+
+  .orbital-reference-label {
+    width: 100%;
+  }
+}

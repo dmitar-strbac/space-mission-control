@@ -228,8 +228,8 @@ frontend and end-to-end system integration.
 - [x] Real-time telemetry
 - [x] Emergency Abort workflow
 - [x] Mission management interface
-- [ ] Live mission-control dashboard
-- [ ] Mission command interface
+- [x] Live mission-control dashboard
+- [x] Mission command interface
 - [ ] Safety alerts and emergency controls
 - [ ] End-to-end integration and final UI polish
 - [ ] LEO rendezvous missions

@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.serialization import simulation_state_response
 from app.core.config import get_settings
 from app.core.database import get_session
+from app.domain.enums import SimulationStatus
+from app.messaging.lifecycle_publisher import publish_simulation_completed
 from app.messaging.publisher import event_bus
 from app.messaging.state_publisher import publish_simulation_state
 from app.schemas.simulation import (
@@ -126,8 +128,10 @@ async def advance_simulation(
 
     runtime = await service.advance(
         mission_id,
-        real_duration_s=payload.real_duration_s,
+        real_duration_s=(payload.real_duration_s),
     )
+
+    simulation = await service.get(mission_id)
 
     if settings.messaging_enabled:
         await publish_simulation_state(
@@ -135,6 +139,13 @@ async def advance_simulation(
             simulation=simulation,
             runtime=runtime,
         )
+
+        if simulation.status is SimulationStatus.COMPLETED:
+            await publish_simulation_completed(
+                event_bus=event_bus,
+                simulation=simulation,
+                runtime=runtime,
+            )
 
     return SimulationAdvanceResponse(
         simulated_duration_s=(payload.real_duration_s * simulation.simulation_speed),

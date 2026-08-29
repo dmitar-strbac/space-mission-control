@@ -190,6 +190,15 @@ async def register_flight_dynamics_saga_worker(
                     mission,
                     "oxygen_consumption_rate_kg_s",
                 ),
+                battery_kwh=float(
+                    resources.get(
+                        "available_energy_kwh",
+                        vehicle.get(
+                            "battery_capacity_kwh",
+                            0.0,
+                        ),
+                    )
+                ),
                 power_consumption_kw=_float_value(
                     mission,
                     "power_consumption_kw",

@@ -7,6 +7,10 @@ from uuid import UUID
 from app.core.config import get_settings
 from app.core.database import SessionFactory
 from app.domain.enums import SimulationStatus
+from app.messaging.lifecycle_publisher import (
+    publish_simulation_completed,
+    publish_simulation_failed,
+)
 from app.messaging.publisher import event_bus
 from app.messaging.state_publisher import publish_simulation_state
 from app.services.simulation_service import SimulationService
@@ -23,7 +27,11 @@ class SimulationRuntimeManager:
         tick_interval_s: float = 1.0,
     ) -> None:
         self._tick_interval_s = tick_interval_s
-        self._tasks: dict[UUID, asyncio.Task[None]] = {}
+
+        self._tasks: dict[
+            UUID,
+            asyncio.Task[None],
+        ] = {}
 
         self.enabled = True
 
@@ -41,7 +49,7 @@ class SimulationRuntimeManager:
 
         task = asyncio.create_task(
             self._run(mission_id),
-            name=f"simulation-runtime:{mission_id}",
+            name=(f"simulation-runtime:{mission_id}"),
         )
 
         self._tasks[mission_id] = task
@@ -55,10 +63,7 @@ class SimulationRuntimeManager:
             None,
         )
 
-        if task is None:
-            return
-
-        if task.done():
+        if task is None or task.done():
             return
 
         task.cancel()
@@ -66,7 +71,9 @@ class SimulationRuntimeManager:
         with suppress(asyncio.CancelledError):
             await task
 
-    async def shutdown(self) -> None:
+    async def shutdown(
+        self,
+    ) -> None:
         tasks = list(self._tasks.values())
 
         self._tasks.clear()
@@ -94,7 +101,7 @@ class SimulationRuntimeManager:
         current_task = asyncio.current_task()
 
         logger.info(
-            "Started autonomous simulation runtime for mission %s.",
+            ("Started autonomous simulation runtime for mission %s."),
             mission_id,
         )
 
@@ -105,25 +112,17 @@ class SimulationRuntimeManager:
                 async with SessionFactory() as session:
                     service = SimulationService(session)
 
-                    simulation = await service.get(
-                        mission_id,
-                    )
+                    simulation = await service.get(mission_id)
 
                     if simulation.status is not SimulationStatus.RUNNING:
-                        logger.info(
-                            (
-                                "Stopping autonomous simulation runtime "
-                                "for mission %s because status is %s."
-                            ),
-                            mission_id,
-                            simulation.status.value,
-                        )
                         return
 
                     runtime = await service.advance(
                         mission_id,
-                        real_duration_s=self._tick_interval_s,
+                        real_duration_s=(self._tick_interval_s),
                     )
+
+                    simulation = await service.get(mission_id)
 
                     if settings.messaging_enabled:
                         await publish_simulation_state(
@@ -132,6 +131,21 @@ class SimulationRuntimeManager:
                             runtime=runtime,
                         )
 
+                        if simulation.status is SimulationStatus.COMPLETED:
+                            await publish_simulation_completed(
+                                event_bus=event_bus,
+                                simulation=simulation,
+                                runtime=runtime,
+                            )
+
+                    if simulation.status is SimulationStatus.COMPLETED:
+                        logger.info(
+                            ("Simulation for mission %s completed."),
+                            mission_id,
+                        )
+
+                        return
+
                 tick_duration_s = monotonic() - tick_started_at
 
                 sleep_duration_s = max(
@@ -139,27 +153,42 @@ class SimulationRuntimeManager:
                     self._tick_interval_s - tick_duration_s,
                 )
 
-                await asyncio.sleep(
-                    sleep_duration_s,
-                )
+                await asyncio.sleep(sleep_duration_s)
 
         except asyncio.CancelledError:
             logger.info(
-                "Stopped autonomous simulation runtime for mission %s.",
+                ("Stopped autonomous simulation runtime for mission %s."),
                 mission_id,
             )
+
             raise
 
-        except Exception:
+        except Exception as error:
             logger.exception(
                 ("Autonomous simulation runtime failed for mission %s."),
                 mission_id,
             )
 
+            if settings.messaging_enabled:
+                try:
+                    async with SessionFactory() as session:
+                        simulation = await SimulationService(session).get(mission_id)
+
+                    await publish_simulation_failed(
+                        event_bus=event_bus,
+                        mission_id=mission_id,
+                        simulation_session_id=(simulation.id),
+                        reason=str(error),
+                    )
+
+                except Exception:
+                    logger.exception(
+                        ("Failed to publish simulation failure for mission %s."),
+                        mission_id,
+                    )
+
         finally:
-            stored_task = self._tasks.get(
-                mission_id,
-            )
+            stored_task = self._tasks.get(mission_id)
 
             if stored_task is current_task:
                 self._tasks.pop(

@@ -26,6 +26,20 @@ export interface Maneuver {
   status: ManeuverStatus;
 }
 
+export interface TrajectoryVector2D {
+  x: number;
+  y: number;
+}
+
+export interface TrajectoryStateVector {
+  position: TrajectoryVector2D;
+  velocity: TrajectoryVector2D;
+
+  total_mass_kg: number;
+  propellant_mass_kg: number;
+  elapsed_time_s: number;
+}
+
 export interface TrajectoryPlan {
   id: string;
   mission_id: string;
@@ -35,8 +49,8 @@ export interface TrajectoryPlan {
   departure_time: string;
   arrival_time: string;
 
-  initial_state_vector: Record<string, unknown>;
-  target_state_vector: Record<string, unknown>;
+  initial_state_vector: TrajectoryStateVector;
+  target_state_vector: TrajectoryStateVector;
 
   required_delta_v_m_s: number;
   estimated_propellant_kg: number;

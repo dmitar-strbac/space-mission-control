@@ -31,7 +31,6 @@ import {
 import {
   getSimulation,
   getSimulationState,
-  startSimulation
 } from "../api/simulationApi";
 
 import {
@@ -49,8 +48,21 @@ import {
 } from "../hooks/useMissionTelemetry";
 
 import {
+  getTrajectoryManeuvers,
+  getTrajectoryPlan,
+} from "../api/trajectoryApi";
+
+import {
   formatLabel,
 } from "../utils/formatters";
+
+import {
+  OrbitalDisplay,
+} from "../components/control/OrbitalDisplay";
+
+import {
+  TelemetryCharts,
+} from "../components/control/TelemetryCharts";
 
 function resourceTone(value: number) {
   if (value <= 15) {
@@ -149,6 +161,46 @@ export function MissionControlPage() {
 
       enabled:
         Boolean(missionId),
+
+      refetchInterval:
+        simulationQuery
+          .data
+          ?.status ===
+        "RUNNING"
+          ? 1_000
+          : 5_000,
+    });
+
+  const trajectoryQuery =
+    useQuery({
+      queryKey: [
+        "trajectory",
+        missionId,
+      ],
+
+      queryFn: () =>
+        getTrajectoryPlan(
+          missionId!,
+        ),
+
+      enabled:
+        Boolean(missionId),
+    });
+
+  const maneuversQuery =
+    useQuery({
+      queryKey: [
+        "trajectory-maneuvers",
+        missionId,
+      ],
+
+      queryFn: () =>
+        getTrajectoryManeuvers(
+          missionId!,
+        ),
+
+      enabled:
+        Boolean(missionId),
     });
 
   const {
@@ -163,22 +215,17 @@ export function MissionControlPage() {
 
   const launchMutation =
     useMutation({
-      mutationFn:
-        async () => {
-          if (!missionId) {
-            throw new Error(
-              "Mission id is required.",
-            );
-          }
-
-          await launchMission(
-            missionId,
+      mutationFn: async () => {
+        if (!missionId) {
+          throw new Error(
+            "Mission ID is required.",
           );
+        }
 
-          return startSimulation(
-            missionId,
-          );
-        },
+        return launchMission(
+          missionId,
+        );
+      },
 
       onSuccess:
         async () => {
@@ -205,7 +252,9 @@ export function MissionControlPage() {
 
   if (
     missionQuery.isLoading ||
-    simulationQuery.isLoading
+    simulationQuery.isLoading ||
+    trajectoryQuery.isLoading ||
+    maneuversQuery.isLoading
   ) {
     return (
       <div className="detail-loading">
@@ -221,7 +270,17 @@ export function MissionControlPage() {
   const simulation =
     simulationQuery.data;
 
-  if (!mission || !simulation) {
+  const trajectory =
+    trajectoryQuery.data;
+
+  const maneuvers =
+    maneuversQuery.data ?? [];
+
+  if (
+    !mission ||
+    !simulation ||
+    !trajectory
+  ) {
     return (
       <div className="content-error-state">
         <Orbit size={30} />
@@ -498,6 +557,17 @@ export function MissionControlPage() {
         </article>
       </section>
 
+      <OrbitalDisplay
+        trajectory={trajectory}
+        maneuvers={maneuvers}
+        currentState={
+          simulationStateQuery.data
+        }
+        missionStatus={
+          mission.status
+        }
+      />
+
       <section className="telemetry-section-heading">
         <div>
           <span className="eyebrow">
@@ -720,6 +790,26 @@ export function MissionControlPage() {
           }
         />
       </section>
+
+      <section className="telemetry-section-heading telemetry-history-heading">
+        <div>
+          <span className="eyebrow">
+            Flight History
+          </span>
+
+          <h2>
+            Live telemetry trends
+          </h2>
+        </div>
+
+        <span className="telemetry-sample-count">
+          Last {telemetry.length} samples
+        </span>
+      </section>
+
+      <TelemetryCharts
+        telemetry={telemetry}
+      />
     </div>
   );
 }
