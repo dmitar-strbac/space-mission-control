@@ -17,6 +17,7 @@ from app.schemas.simulation import (
     SimulationResponse,
     SimulationStateResponse,
 )
+from app.services.simulation_runtime import simulation_runtime_manager
 from app.services.simulation_service import SimulationService
 
 router = APIRouter(
@@ -69,6 +70,10 @@ async def start_simulation(
 ) -> SimulationResponse:
     simulation = await SimulationService(session).start(mission_id)
 
+    simulation_runtime_manager.start(
+        mission_id,
+    )
+
     return SimulationResponse.model_validate(simulation)
 
 
@@ -82,6 +87,10 @@ async def pause_simulation(
 ) -> SimulationResponse:
     simulation = await SimulationService(session).pause(mission_id)
 
+    await simulation_runtime_manager.stop(
+        mission_id,
+    )
+
     return SimulationResponse.model_validate(simulation)
 
 
@@ -94,6 +103,10 @@ async def resume_simulation(
     session: SessionDependency,
 ) -> SimulationResponse:
     simulation = await SimulationService(session).resume(mission_id)
+
+    simulation_runtime_manager.start(
+        mission_id,
+    )
 
     return SimulationResponse.model_validate(simulation)
 

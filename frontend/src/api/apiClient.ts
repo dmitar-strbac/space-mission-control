@@ -3,6 +3,15 @@ const API_BASE_URL =
 
 const TOKEN_STORAGE_KEY = "smc_access_token";
 
+export function getWebSocketBaseUrl(): string {
+  const url = new URL(API_BASE_URL);
+
+  url.protocol =
+    url.protocol === "https:" ? "wss:" : "ws:";
+
+  return url.toString();
+}
+
 export class ApiError extends Error {
   status: number;
   detail?: unknown;

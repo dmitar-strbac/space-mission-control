@@ -4326,6 +4326,70 @@ select {
   opacity: 0.82;
 }
 
+.login-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+
+  padding: 0.9rem 1rem;
+
+  border: 1px solid rgb(255 82 109 / 28%);
+  border-radius: 0.65rem;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgb(255 82 109 / 8%),
+      rgb(255 82 109 / 3%)
+    );
+
+  box-shadow:
+    inset 3px 0 0 rgb(255 82 109 / 70%),
+    0 0 24px rgb(255 82 109 / 4%);
+}
+
+.login-error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+
+  border: 1px solid rgb(255 82 109 / 25%);
+  border-radius: 0.45rem;
+
+  background: rgb(255 82 109 / 8%);
+  color: #ff526d;
+}
+
+.login-error-content {
+  min-width: 0;
+}
+
+.login-error-content > span {
+  display: block;
+
+  margin-bottom: 0.2rem;
+
+  color: #ff6078;
+
+  font-family: "Oxanium", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.login-error-content p {
+  margin: 0;
+
+  color: #dca0aa;
+
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
 
 /* =========================================================
    Page headings
@@ -5381,5 +5445,895 @@ select {
 @media (max-width: 720px) {
   .flight-profile-form {
     grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   Live Mission Control
+   ========================================================= */
+
+.mission-control-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.mission-control-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 6px 0 2px;
+}
+
+.mission-control-hero h1 {
+  margin: 8px 0 12px;
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    clamp(
+      2rem,
+      4vw,
+      3.3rem
+    );
+
+  line-height: 1;
+
+  letter-spacing:
+    -0.04em;
+}
+
+.mission-control-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.mission-control-meta
+  > span:not(
+    .mission-status-badge
+  ) {
+  border:
+    1px solid
+    var(--color-border);
+
+  border-radius: 999px;
+
+  padding:
+    6px 9px;
+
+  color:
+    var(
+      --color-text-secondary
+    );
+
+  background:
+    rgba(
+      9,
+      17,
+      31,
+      0.68
+    );
+
+  font-family:
+    var(--font-display);
+
+  font-size: 0.64rem;
+  font-weight: 700;
+
+  letter-spacing:
+    0.06em;
+}
+
+.mission-control-link-state {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  min-width: 180px;
+
+  border:
+    1px solid
+    var(--color-border);
+
+  border-radius:
+    var(--radius-md);
+
+  padding:
+    12px 14px;
+
+  background:
+    rgba(
+      9,
+      17,
+      31,
+      0.75
+    );
+
+  box-shadow:
+    var(--shadow-panel);
+}
+
+.mission-control-link-state
+  div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mission-control-link-state
+  small,
+.control-status-values
+  small {
+  color:
+    var(
+      --color-text-muted
+    );
+
+  font-size:
+    0.58rem;
+
+  font-weight: 800;
+
+  letter-spacing:
+    0.13em;
+}
+
+.mission-control-link-state
+  strong {
+  font-family:
+    var(--font-display);
+
+  font-size:
+    0.78rem;
+}
+
+.control-link-dot {
+  width: 9px;
+  height: 9px;
+
+  flex: 0 0 auto;
+
+  border-radius: 50%;
+
+  background:
+    var(
+      --color-text-muted
+    );
+}
+
+.control-link-connected {
+  background:
+    var(--color-success);
+
+  box-shadow:
+    0 0 14px
+    rgba(
+      70,
+      217,
+      147,
+      0.7
+    );
+}
+
+.control-link-connecting {
+  background:
+    var(--color-caution);
+
+  box-shadow:
+    0 0 14px
+    rgba(
+      244,
+      201,
+      93,
+      0.55
+    );
+}
+
+.control-link-error,
+.control-link-disconnected {
+  background:
+    var(--color-critical);
+
+  box-shadow:
+    0 0 14px
+    rgba(
+      255,
+      93,
+      115,
+      0.5
+    );
+}
+
+.launch-control-banner {
+  display: grid;
+
+  grid-template-columns:
+    auto 1fr auto;
+
+  align-items: center;
+  gap: 18px;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(
+      80,
+      216,
+      255,
+      0.18
+    );
+
+  border-radius:
+    var(--radius-lg);
+
+  padding: 20px;
+
+  background:
+    radial-gradient(
+      circle at 0% 50%,
+      rgba(
+        76,
+        141,
+        255,
+        0.16
+      ),
+      transparent 35%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(
+        9,
+        17,
+        31,
+        0.96
+      ),
+      rgba(
+        8,
+        20,
+        34,
+        0.9
+      )
+    );
+
+  box-shadow:
+    var(--shadow-panel);
+}
+
+.launch-control-icon {
+  display: grid;
+
+  width: 48px;
+  height: 48px;
+
+  place-items: center;
+
+  border:
+    1px solid
+    rgba(
+      80,
+      216,
+      255,
+      0.23
+    );
+
+  border-radius:
+    13px;
+
+  color:
+    var(--color-cyan);
+
+  background:
+    rgba(
+      76,
+      141,
+      255,
+      0.08
+    );
+}
+
+.launch-control-banner h2,
+.telemetry-section-heading h2,
+.control-status-card h2 {
+  margin:
+    5px 0 0;
+
+  font-family:
+    var(--font-display);
+}
+
+.launch-control-banner h2 {
+  font-size:
+    1.05rem;
+}
+
+.launch-control-banner p {
+  max-width:
+    720px;
+
+  margin:
+    6px 0 0;
+
+  color:
+    var(
+      --color-text-secondary
+    );
+
+  font-size:
+    0.82rem;
+
+  line-height:
+    1.55;
+}
+
+.control-primary-action {
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  gap: 8px;
+
+  min-width:
+    165px;
+
+  padding:
+    11px 15px;
+}
+
+.mission-control-summary-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.45fr)
+    minmax(280px, 0.75fr);
+
+  gap: 16px;
+}
+
+.control-status-card {
+  border:
+    1px solid
+    var(--color-border);
+
+  border-radius:
+    var(--radius-lg);
+
+  padding: 19px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        13,
+        24,
+        41,
+        0.9
+      ),
+      rgba(
+        8,
+        17,
+        29,
+        0.94
+      )
+    );
+
+  box-shadow:
+    var(--shadow-panel);
+}
+
+.control-status-card h2 {
+  font-size:
+    0.98rem;
+}
+
+.control-status-values {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
+
+  gap: 10px;
+
+  margin-top:
+    18px;
+}
+
+.control-status-values
+  > div {
+  display: flex;
+
+  min-width: 0;
+
+  flex-direction:
+    column;
+
+  gap: 5px;
+
+  border:
+    1px solid
+    rgba(
+      125,
+      174,
+      255,
+      0.1
+    );
+
+  border-radius:
+    10px;
+
+  padding:
+    11px 12px;
+
+  background:
+    rgba(
+      5,
+      10,
+      18,
+      0.36
+    );
+}
+
+.control-status-values
+  strong {
+  overflow:
+    hidden;
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    0.76rem;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.control-safety-line {
+  display: flex;
+
+  align-items:
+    center;
+
+  gap: 14px;
+
+  margin-top:
+    18px;
+}
+
+.control-safety-line
+  > span {
+  min-width:
+    72px;
+
+  border-radius:
+    8px;
+
+  padding:
+    8px 10px;
+
+  text-align:
+    center;
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    0.69rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    0.05em;
+}
+
+.safety-nominal {
+  border:
+    1px solid
+    rgba(
+      70,
+      217,
+      147,
+      0.22
+    );
+
+  color:
+    var(--color-success);
+
+  background:
+    rgba(
+      70,
+      217,
+      147,
+      0.08
+    );
+}
+
+.safety-critical {
+  border:
+    1px solid
+    rgba(
+      255,
+      93,
+      115,
+      0.28
+    );
+
+  color:
+    var(--color-critical);
+
+  background:
+    rgba(
+      255,
+      93,
+      115,
+      0.09
+    );
+}
+
+.control-safety-line p {
+  margin: 0;
+
+  color:
+    var(
+      --color-text-secondary
+    );
+
+  font-size:
+    0.78rem;
+
+  line-height:
+    1.5;
+}
+
+.telemetry-section-heading {
+  display: flex;
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    space-between;
+
+  gap: 16px;
+
+  margin-top:
+    4px;
+}
+
+.telemetry-section-heading h2 {
+  font-size:
+    1.2rem;
+}
+
+.telemetry-sample-count {
+  color:
+    var(
+      --color-text-muted
+    );
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    0.66rem;
+
+  letter-spacing:
+    0.045em;
+}
+
+.telemetry-metric-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+
+  gap: 12px;
+}
+
+.telemetry-metric {
+  position:
+    relative;
+
+  overflow:
+    hidden;
+
+  min-height:
+    145px;
+
+  border:
+    1px solid
+    var(--color-border);
+
+  border-radius:
+    var(--radius-md);
+
+  padding:
+    15px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        13,
+        24,
+        41,
+        0.9
+      ),
+      rgba(
+        7,
+        15,
+        27,
+        0.92
+      )
+    );
+
+  box-shadow:
+    0 12px 35px
+    rgba(
+      0,
+      0,
+      0,
+      0.16
+    );
+}
+
+.telemetry-metric::after {
+  position:
+    absolute;
+
+  right:
+    -25px;
+
+  bottom:
+    -38px;
+
+  width:
+    90px;
+
+  height:
+    90px;
+
+  border-radius:
+    50%;
+
+  background:
+    rgba(
+      76,
+      141,
+      255,
+      0.055
+    );
+
+  content: "";
+}
+
+.telemetry-metric-heading {
+  display: flex;
+
+  align-items:
+    center;
+
+  gap: 7px;
+
+  color:
+    var(
+      --color-text-secondary
+    );
+
+  font-size:
+    0.69rem;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.04em;
+
+  text-transform:
+    uppercase;
+}
+
+.telemetry-metric-icon {
+  display: grid;
+
+  place-items:
+    center;
+
+  color:
+    var(--color-cyan);
+}
+
+.telemetry-metric
+  > strong {
+  display: block;
+
+  margin-top:
+    18px;
+
+  font-family:
+    var(--font-display);
+
+  font-size:
+    1.35rem;
+
+  letter-spacing:
+    -0.03em;
+}
+
+.telemetry-metric
+  > small {
+  display: block;
+
+  overflow:
+    hidden;
+
+  margin-top:
+    6px;
+
+  color:
+    var(
+      --color-text-muted
+    );
+
+  font-size:
+    0.69rem;
+
+  text-overflow:
+    ellipsis;
+
+  white-space:
+    nowrap;
+}
+
+.telemetry-meter {
+  position:
+    absolute;
+
+  right: 15px;
+  bottom: 14px;
+  left: 15px;
+
+  overflow:
+    hidden;
+
+  height:
+    3px;
+
+  border-radius:
+    999px;
+
+  background:
+    rgba(
+      125,
+      174,
+      255,
+      0.1
+    );
+}
+
+.telemetry-meter span {
+  display: block;
+
+  height: 100%;
+
+  border-radius:
+    inherit;
+
+  background:
+    var(--color-cyan);
+
+  box-shadow:
+    0 0 10px
+    rgba(
+      80,
+      216,
+      255,
+      0.45
+    );
+}
+
+.telemetry-tone-caution
+  .telemetry-metric-icon,
+.telemetry-tone-caution
+  > strong {
+  color:
+    var(--color-caution);
+}
+
+.telemetry-tone-caution
+  .telemetry-meter
+  span {
+  background:
+    var(--color-caution);
+}
+
+.telemetry-tone-critical
+  .telemetry-metric-icon,
+.telemetry-tone-critical
+  > strong {
+  color:
+    var(--color-critical);
+}
+
+.telemetry-tone-critical
+  .telemetry-meter
+  span {
+  background:
+    var(--color-critical);
+}
+
+@media
+  (max-width: 1200px) {
+  .telemetry-metric-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+}
+
+@media
+  (max-width: 900px) {
+  .mission-control-summary-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .mission-control-hero {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
+  }
+
+  .launch-control-banner {
+    grid-template-columns:
+      auto 1fr;
+  }
+
+  .control-primary-action {
+    grid-column:
+      1 / -1;
+
+    width: 100%;
+  }
+}
+
+@media
+  (max-width: 640px) {
+  .telemetry-metric-grid,
+  .control-status-values {
+    grid-template-columns:
+      1fr;
+  }
+
+  .telemetry-section-heading {
+    align-items:
+      flex-start;
+
+    flex-direction:
+      column;
   }
 }

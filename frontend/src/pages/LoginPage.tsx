@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  CircleAlert,
   LockKeyhole,
   RadioTower,
   ShieldCheck,
@@ -147,9 +148,30 @@ export function LoginPage() {
           </label>
 
           {error && (
-            <div className="login-error">
-              {error}
-            </div>
+            <motion.div
+              className="login-error"
+              role="alert"
+              initial={{
+                opacity: 0,
+                y: -5,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                duration: 0.2,
+              }}
+            >
+              <div className="login-error-icon">
+                <CircleAlert size={18} />
+              </div>
+
+              <div className="login-error-content">
+                <span>AUTHENTICATION DENIED</span>
+                <p>{error}</p>
+              </div>
+            </motion.div>
           )}
 
           <button

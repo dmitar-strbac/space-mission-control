@@ -15,6 +15,7 @@ from app.messaging.abort_worker import register_abort_worker
 from app.messaging.publisher import event_bus
 from app.messaging.saga_worker import register_flight_dynamics_saga_worker
 from app.services.runtime_store import runtime_store
+from app.services.simulation_runtime import simulation_runtime_manager
 
 settings = get_settings()
 
@@ -40,6 +41,8 @@ async def lifespan(
         await register_abort_worker(event_bus)
 
     yield
+
+    await simulation_runtime_manager.shutdown()
 
     if settings.messaging_enabled:
         await event_bus.close()

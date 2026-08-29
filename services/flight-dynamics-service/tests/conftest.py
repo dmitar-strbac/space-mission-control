@@ -14,6 +14,7 @@ from app.core.database import get_session
 from app.main import app
 from app.models import Base
 from app.services.runtime_store import runtime_store
+from app.services.simulation_runtime import simulation_runtime_manager
 
 
 @pytest.fixture(autouse=True)
@@ -56,3 +57,14 @@ def client(
         yield test_client
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def disable_autonomous_runtime() -> Iterator[None]:
+    previous_state = simulation_runtime_manager.enabled
+
+    simulation_runtime_manager.enabled = False
+
+    yield
+
+    simulation_runtime_manager.enabled = previous_state
