@@ -28,3 +28,13 @@
     background-position: -200% 0;
   }
 }
+
+@keyframes drift-clouds {
+  from {
+    transform: translateX(-2.5%);
+  }
+
+  to {
+    transform: translateX(2.5%);
+  }
+}

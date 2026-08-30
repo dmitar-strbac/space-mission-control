@@ -79,3 +79,14 @@ export function getMissionTimeline(
     `/api/mission/missions/${missionId}/timeline`,
   );
 }
+
+export function abortMission(
+  missionId: string,
+): Promise<Mission> {
+  return apiRequest<Mission>(
+    `/api/mission/missions/${missionId}/abort`,
+    {
+      method: "POST",
+    },
+  );
+}

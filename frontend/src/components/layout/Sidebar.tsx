@@ -72,17 +72,29 @@ export function Sidebar() {
           Live Systems
         </span>
 
-        <button className="sidebar-link sidebar-link-disabled" disabled>
+        <div className="sidebar-link sidebar-live-system">
           <Gauge size={18} />
-          <span>Mission Control</span>
-          <small>SOON</small>
-        </button>
 
-        <button className="sidebar-link sidebar-link-disabled" disabled>
+          <span>
+            Mission Control
+          </span>
+
+          <small className="sidebar-live-label">
+            LIVE
+          </small>
+        </div>
+
+        <div className="sidebar-link sidebar-live-system">
           <Activity size={18} />
-          <span>Telemetry</span>
-          <small>SOON</small>
-        </button>
+
+          <span>
+            Telemetry
+          </span>
+
+          <small className="sidebar-live-label">
+            LIVE
+          </small>
+        </div>
       </nav>
 
       <div className="sidebar-footer">

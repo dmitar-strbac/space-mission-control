@@ -1,4 +1,8 @@
 import {
+  useState,
+} from "react";
+
+import {
   useMutation,
   useQuery,
   useQueryClient,
@@ -24,6 +28,7 @@ import {
 } from "react-router-dom";
 
 import {
+  abortMission,
   getMission,
   launchMission,
 } from "../api/missionApi";
@@ -31,6 +36,8 @@ import {
 import {
   getSimulation,
   getSimulationState,
+  pauseSimulation,
+  resumeSimulation,
 } from "../api/simulationApi";
 
 import {
@@ -63,6 +70,18 @@ import {
 import {
   TelemetryCharts,
 } from "../components/control/TelemetryCharts";
+
+import {
+  AbortConfirmationModal,
+} from "../components/control/AbortConfirmationModal";
+
+import {
+  MissionAlertPanel,
+} from "../components/control/MissionAlertPanel";
+
+import {
+  MissionOperationsPanel,
+} from "../components/control/MissionOperationsPanel";
 
 function resourceTone(value: number) {
   if (value <= 15) {
@@ -113,6 +132,11 @@ export function MissionControlPage() {
 
   const { user } =
     useAuth();
+
+  const [
+    abortConfirmationOpen,
+    setAbortConfirmationOpen,
+  ] = useState(false);
 
   const missionQuery = useQuery({
     queryKey: [
@@ -249,6 +273,107 @@ export function MissionControlPage() {
         },
     });
 
+  const pauseMutation =
+    useMutation({
+      mutationFn: async () => {
+        if (!missionId) {
+          throw new Error(
+            "Mission ID is required.",
+          );
+        }
+
+        return pauseSimulation(
+          missionId,
+        );
+      },
+
+      onSuccess:
+        async () => {
+          await queryClient
+            .invalidateQueries({
+              queryKey: [
+                "simulation",
+                missionId,
+              ],
+            });
+        },
+    });
+
+  const resumeMutation =
+    useMutation({
+      mutationFn: async () => {
+        if (!missionId) {
+          throw new Error(
+            "Mission ID is required.",
+          );
+        }
+
+        return resumeSimulation(
+          missionId,
+        );
+      },
+
+      onSuccess:
+        async () => {
+          await Promise.all([
+            queryClient
+              .invalidateQueries({
+                queryKey: [
+                  "simulation",
+                  missionId,
+                ],
+              }),
+
+            queryClient
+              .invalidateQueries({
+                queryKey: [
+                  "simulation-state",
+                  missionId,
+                ],
+              }),
+          ]);
+        },
+    });
+
+  const abortMutation =
+    useMutation({
+      mutationFn: async () => {
+        if (!missionId) {
+          throw new Error(
+            "Mission ID is required.",
+          );
+        }
+
+        return abortMission(
+          missionId,
+        );
+      },
+
+      onSuccess:
+        async () => {
+          setAbortConfirmationOpen(
+            false,
+          );
+
+          await Promise.all([
+            queryClient
+              .invalidateQueries({
+                queryKey: [
+                  "mission",
+                  missionId,
+                ],
+              }),
+
+            queryClient
+              .invalidateQueries({
+                queryKey: [
+                  "simulation",
+                  missionId,
+                ],
+              }),
+          ]);
+        },
+    });
 
   if (
     missionQuery.isLoading ||
@@ -323,6 +448,16 @@ export function MissionControlPage() {
   const communication =
     latestTelemetry
       ?.communication;
+
+  const operationPending =
+    pauseMutation.isPending ||
+    resumeMutation.isPending ||
+    abortMutation.isPending;
+
+  const operationError =
+    pauseMutation.isError ||
+    resumeMutation.isError ||
+    abortMutation.isError;
 
   return (
     <div className="mission-control-page">
@@ -555,6 +690,41 @@ export function MissionControlPage() {
             </p>
           </div>
         </article>
+      </section>
+
+      <section className="mission-control-operations-grid">
+        <MissionOperationsPanel
+          missionStatus={
+            mission.status
+          }
+          simulationStatus={
+            simulation.status
+          }
+          isOperator={
+            isOperator
+          }
+          operationPending={
+            operationPending
+          }
+          operationError={
+            operationError
+          }
+          onPause={() =>
+            pauseMutation.mutate()
+          }
+          onResume={() =>
+            resumeMutation.mutate()
+          }
+          onAbort={() =>
+            setAbortConfirmationOpen(
+              true,
+            )
+          }
+        />
+
+        <MissionAlertPanel
+          alerts={alerts}
+        />
       </section>
 
       <OrbitalDisplay
@@ -810,6 +980,25 @@ export function MissionControlPage() {
       <TelemetryCharts
         telemetry={telemetry}
       />
+
+      {abortConfirmationOpen && (
+        <AbortConfirmationModal
+          missionName={
+            mission.name
+          }
+          pending={
+            abortMutation.isPending
+          }
+          onCancel={() =>
+            setAbortConfirmationOpen(
+              false,
+            )
+          }
+          onConfirm={() =>
+            abortMutation.mutate()
+          }
+        />
+      )}
     </div>
   );
 }
