@@ -11,9 +11,15 @@ from app.messaging.publisher import (
 )
 from app.schemas.mission import MissionCreate, MissionListResponse, MissionResponse
 from app.schemas.mission_event import MissionEventResponse
+from app.schemas.preparation import (
+    MissionPreparationResponse,
+    SagaStepResponse,
+)
 from app.services.abort_workflow import AbortWorkflowService
+from app.services.launch_workflow import LaunchWorkflowService
 from app.services.mission_service import MissionService
 from app.services.prepare_mission_saga import PrepareMissionSagaService
+from app.services.saga_step_service import SagaStepService
 
 router = APIRouter(prefix="/missions", tags=["Missions"])
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
@@ -67,9 +73,20 @@ async def prepare_mission(
     return MissionResponse.model_validate(mission)
 
 
-@router.post("/{mission_id}/launch", response_model=MissionResponse)
-async def launch_mission(mission_id: UUID, session: SessionDependency) -> MissionResponse:
-    mission = await MissionService(session).launch(mission_id)
+@router.post(
+    "/{mission_id}/launch",
+    response_model=MissionResponse,
+)
+async def launch_mission(
+    mission_id: UUID,
+    session: SessionDependency,
+    publisher: PublisherDependency,
+) -> MissionResponse:
+    mission = await LaunchWorkflowService(
+        MissionService(session),
+        publisher,
+    ).launch(mission_id)
+
     return MissionResponse.model_validate(mission)
 
 
@@ -91,6 +108,27 @@ async def abort_mission(
     )
 
     return MissionResponse.model_validate(mission)
+
+
+@router.get(
+    "/{mission_id}/preparation",
+    response_model=MissionPreparationResponse,
+)
+async def get_mission_preparation(
+    mission_id: UUID,
+    session: SessionDependency,
+) -> MissionPreparationResponse:
+    await MissionService(session).get(mission_id)
+
+    saga_id, steps = await SagaStepService(
+        session,
+    ).get_latest_steps_for_mission(mission_id)
+
+    return MissionPreparationResponse(
+        mission_id=mission_id,
+        saga_id=saga_id,
+        steps=[SagaStepResponse.model_validate(step) for step in steps],
+    )
 
 
 @router.get("/{mission_id}/timeline", response_model=list[MissionEventResponse])

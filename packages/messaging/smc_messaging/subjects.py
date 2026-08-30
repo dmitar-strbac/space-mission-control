@@ -43,6 +43,13 @@ class LiveSubject(StrEnum):
     TELEMETRY_PROCESSED = "telemetry.processed"
 
 
+class SimulationLifecycleSubject(StrEnum):
+    START_REQUESTED = "simulation.start.requested"
+
+    COMPLETED = "simulation.completed"
+    FAILED = "simulation.failed"
+
+
 class IntegrationSubject(StrEnum):
     COMMUNICATION_STATUS_UPDATED = "communication.status.updated"
 

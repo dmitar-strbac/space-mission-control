@@ -63,6 +63,31 @@ class MissionService:
             started_at=datetime.now(UTC),
         )
 
+    async def complete(
+        self,
+        mission_id: UUID,
+    ) -> Mission:
+        return await self._transition(
+            mission_id,
+            MissionStatus.COMPLETED,
+            MissionEventType.MISSION_COMPLETED,
+            completed_at=datetime.now(UTC),
+        )
+
+    async def fail(
+        self,
+        mission_id: UUID,
+        *,
+        reason: str,
+    ) -> Mission:
+        return await self._transition(
+            mission_id,
+            MissionStatus.FAILED,
+            MissionEventType.MISSION_FAILED,
+            completed_at=datetime.now(UTC),
+            failure_reason=reason,
+        )
+
     async def abort(self, mission_id: UUID) -> Mission:
         return await self._transition(
             mission_id,

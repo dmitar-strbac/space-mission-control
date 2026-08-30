@@ -227,6 +227,21 @@ class SimulationService:
                 reason=(CheckpointReason.MANEUVER_COMPLETED),
             )
 
+        mission_completed = bool(runtime.maneuvers) and all(
+            maneuver.status is ManeuverExecutionStatus.COMPLETED for maneuver in runtime.maneuvers
+        )
+
+        if mission_completed and simulation.status is SimulationStatus.RUNNING:
+            simulation.status = SimulationStatus.COMPLETED
+
+            simulation.completed_at = datetime.now(UTC)
+
+            self._add_checkpoint(
+                simulation=simulation,
+                runtime=runtime,
+                reason=CheckpointReason.COMPLETED,
+            )
+
         if (
             runtime.state.elapsed_time_s - runtime.last_checkpoint_time_s
             >= simulation.checkpoint_interval_s

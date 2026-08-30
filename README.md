@@ -27,37 +27,44 @@ Originally developed as a **Bachelor's Thesis** at the **Faculty of Technical Sc
 
 ## 🎯 Why this project
 
-The goal of this project is not to reproduce a complete aerospace engineering simulator.
+Space Mission Control explores how distributed software architecture can be
+combined with orbital mechanics to model the complete lifecycle of a simulated
+space mission.
 
-Instead, it explores how modern distributed backend systems can be combined with a simplified but physically consistent orbital simulation to model complex mission planning and execution workflows.
-
-The project emphasizes software architecture, clear service boundaries, event-driven communication, distributed transactions and deterministic simulation rather than graphical realism or aerospace-level engineering accuracy.
-
-By combining concepts from orbital mechanics with modern microservice architecture, the project demonstrates how engineering principles and distributed software systems can be integrated into a cohesive simulation platform.
+Rather than aiming for aerospace-grade fidelity, the project focuses on clear
+service boundaries, event-driven communication, distributed workflows,
+real-time telemetry and deterministic physical simulation.
 
 ---
 
-## 📸 Preview
+## 🎬 Demo
 
-Application screenshots, architecture diagrams and demonstration GIFs will be added as development progresses.
+<p align="center">
+  <img src="docs/media/mission-control-demo.gif" alt="Mission Control Demo" />
+</p>
+
+<p align="center">
+  Real-time LEO mission simulation with orbital propagation,
+  telemetry streaming and mission safety monitoring.
+</p>
 
 ---
 
 ## ✨ Features
 
-- 🚀 Mission planning and preparation
-- 🛰️ Orbital flight simulation
-- 🌍 Physically consistent orbital mechanics
-- 📡 Real-time telemetry streaming
-- ⚙️ Distributed microservice architecture
-- 🔄 Event-driven communication using NATS JetStream
-- 📈 Live WebSocket updates
-- 🛡️ Fault injection and emergency scenarios
-- 📐 Numerical orbit propagation
-- 🧮 Delta-v and propellant calculations
-- ⚖️ Database-per-service architecture
-- 🔥 Distributed mission preparation using Saga orchestration
-- 🐳 Fully containerized development environment
+- 🚀 End-to-end mission planning, preparation and execution
+- 🛰️ Physics-based orbital flight simulation
+- 📐 Trajectory planning and maneuver generation
+- 🚀 Spacecraft and mission resource management
+- 🔥 Distributed mission preparation with Saga orchestration
+- 📡 Real-time telemetry and WebSocket streaming
+- 🎛️ Interactive Mission Control dashboard
+- 🛡️ Safety monitoring and anomaly detection
+- 🚨 Distributed Emergency Abort workflow
+- 📶 Communication delay and command delivery simulation
+- 🔐 Authentication and centralized API Gateway
+- 🗄️ Database-per-service persistence
+- 🐳 Fully containerized local environment
 
 ---
 
@@ -65,17 +72,40 @@ Application screenshots, architecture diagrams and demonstration GIFs will be ad
 
 The platform is organized as a distributed microservice system.
 
-| Service                    | Responsibility                                       |
-| -------------------------- | ---------------------------------------------------- |
-| API Gateway                | Authentication, routing, health checks               |
-| Mission Service            | Mission lifecycle and Saga orchestration             |
-| Vehicle Service            | Spacecraft configuration and resource validation     |
-| Trajectory Service         | Orbital planning and maneuver generation             |
-| Flight Dynamics Service    | Orbital mechanics simulation                         |
-| Communication Service      | Signal delay and command delivery                    |
-| Telemetry & Safety Service | Telemetry processing, alerts and WebSocket streaming |
+| Service                    | Responsibility                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| API Gateway                | Authentication, authorization, routing, circuit breaking, health checks checks |
+| Mission Service            | Mission lifecycle and Saga orchestration                                       |
+| Vehicle Service            | Spacecraft configuration and resource validation                               |
+| Trajectory Service         | Orbital planning and maneuver generation                                       |
+| Flight Dynamics Service    | Orbital mechanics simulation                                                   |
+| Communication Service      | Signal delay and command delivery                                              |
+| Telemetry & Safety Service | Telemetry processing, alerts and WebSocket streaming                           |
 
-> 📌 Architecture diagram will be added as development progresses.
+<p align="center">
+  <img
+    src="docs/diagrams/system-architecture.png"
+    alt="Space Mission Control system architecture"
+    width="900"
+  />
+</p>
+
+Services own their domain data independently and coordinate cross-service
+operations asynchronously through NATS JetStream, while the API Gateway
+provides the external HTTP and WebSocket boundary for the frontend.
+
+---
+
+## 🔄 Distributed Workflows
+
+Mission preparation is coordinated through a Saga spanning the Vehicle,
+Trajectory, Communication and Flight Dynamics domains. Failed preparation
+steps trigger compensation of previously completed operations without relying
+on distributed database transactions.
+
+Emergency Abort follows the same event-driven philosophy: an abort request is
+propagated through the platform, nominal simulation execution is stopped and
+the mission lifecycle transitions through `ABORTING` to `ABORTED`.
 
 ---
 
@@ -83,10 +113,11 @@ The platform is organized as a distributed microservice system.
 
 ### 🐍 Backend
 
-- Python
+- Python 3.13
 - FastAPI
 - SQLAlchemy
 - Alembic
+- Pydantic
 - PyMongo
 
 ### ⚛️ Frontend
@@ -94,18 +125,21 @@ The platform is organized as a distributed microservice system.
 - React
 - TypeScript
 - Vite
+- TanStack Query
+- React Router
 
 ### 🗄️ Databases
 
 - PostgreSQL
 - MongoDB
 
-### 🧪 Testing
+### 🧪 Testing & Quality
 
 - pytest
 - mypy
 - ruff
 - pre-commit
+- Oxlint
 
 ### 🧮 Scientific Computing
 
@@ -115,7 +149,8 @@ The platform is organized as a distributed microservice system.
 ### 📡 Messaging
 
 - NATS
-- NATS JetStream
+- JetStream
+- WebSockets
 
 ### 🐳 Infrastructure
 
@@ -126,7 +161,8 @@ The platform is organized as a distributed microservice system.
 
 ## 🌍 Physical Simulation
 
-Unlike most educational projects, Space Mission Control is based on a simplified but physically consistent orbital mechanics model.
+Space Mission Control uses a simplified but physically consistent orbital
+mechanics model rather than scripted spacecraft movement.
 
 The simulation includes:
 
@@ -139,7 +175,9 @@ The simulation includes:
 - Numerical integration (RK4 / `solve_ivp`)
 - Circular orbit validation using real reference values
 
-The initial implementation focuses on **Low Earth Orbit (LEO)** missions while providing an extensible architecture for rendezvous and future lunar missions.
+The current model focuses on **Low Earth Orbit (LEO)** and prioritizes
+deterministic simulation and software-system integration over aerospace-grade
+numerical fidelity.
 
 ---
 
@@ -201,47 +239,56 @@ Copy-Item .env.example .env
 docker compose up --build
 ```
 
+### Testing & Quality checks
+
+Run the complete backend test suite from the repository root:
+
+```powershell
+.\scripts\test.ps1
+```
+
+Run repository-wide linting and static analysis:
+
+```bash
+uv run pre-commit run --all-files
+```
+
+Validate the frontend:
+
+```bash
+cd frontend
+npm run lint
+npm run build
+```
+
+### Local endpoints
+
+| Component       | Address                 |
+| --------------- | ----------------------- |
+| Mission Control | `http://localhost:5173` |
+| API Gateway     | `http://localhost:8000` |
+| NATS Monitoring | `http://localhost:8222` |
+
 ---
 
 ## 🗺️ Roadmap
 
-The project has completed the **Core Mission Simulation**, **Distributed Mission Preparation**, and **Telemetry & Mission Safety** backend milestones, providing the main domain services required for planning, preparing, simulating and safely aborting Low Earth Orbit (LEO) missions.
+The complete Low Earth Orbit mission workflow is implemented, including
+planning, distributed preparation, autonomous simulation, real-time Mission
+Control and emergency handling.
 
-The roadmap below outlines the remaining gateway, frontend and final integration work.
+### Current
 
-- [x] Project architecture
-- [x] Repository initialization
-- [x] Infrastructure setup
-- [x] Mission Service
-- [x] Vehicle Service
-- [x] Trajectory Service
-- [x] Flight Dynamics Service
-- [x] Telemetry & Safety Service
-- [x] Communication Service
-- [ ] API Gateway
-- [ ] React frontend
-- [x] Prepare Mission Saga
-- [x] Real-time telemetry
-- [x] Emergency Abort workflow
-- [ ] Docker deployment
+- [x] Complete LEO mission lifecycle
+- [x] Distributed microservice architecture
+- [x] Real-time Mission Control
+- [x] Safety and Emergency Abort workflows
 
----
+### Planned Extensions
 
-## 🔭 Project Scope
-
-- Low Earth Orbit missions
-- Orbital maneuver planning
-- Trajectory validation
-- Delta-v calculations
-- Propellant consumption
-- Oxygen and power management
-- Communication latency simulation
-- Mission timeline
-- Real-time telemetry visualization
-- Trajectory deviation detection
-- Distributed Saga transactions
-- Fault injection scenarios
-- Emergency Abort procedures
+- [ ] LEO rendezvous and relative-motion simulation
+- [ ] Three-dimensional orbital mechanics and plane changes
+- [ ] Lunar transfer and lunar orbit missions
 
 ---
 
@@ -253,7 +300,7 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 ## 👨‍💻 Author
 
-**Dmitar Štrbac**
+**[Dmitar Štrbac](https://github.com/dmitar-strbac)**
 
 Bachelor's Thesis Project
 
