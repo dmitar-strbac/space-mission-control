@@ -6,6 +6,7 @@ import {
   Gauge,
   LoaderCircle,
   Orbit,
+  RadioTower,
   Rocket,
   Satellite,
   Users,
@@ -139,6 +140,30 @@ export function MissionDetailsPage() {
             >
               <CheckCircle2 size={17} />
               Review Flight Plan
+            </Link>
+          )}
+
+          {[
+            "READY",
+            "IN_PROGRESS",
+            "ABORTING",
+            "ABORTED",
+            "COMPLETED",
+          ].includes(
+            mission.status,
+          ) && (
+            <Link
+              className={
+                "secondary-button " +
+                "page-action-button"
+              }
+              to={`/missions/${mission.id}/control`}
+            >
+              <RadioTower
+                size={17}
+              />
+
+              Mission Control
             </Link>
           )}
         </div>

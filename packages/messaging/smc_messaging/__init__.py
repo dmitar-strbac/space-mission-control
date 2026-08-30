@@ -12,6 +12,7 @@ from smc_messaging.subjects import (
     LiveSubject,
     SafetySubject,
     SagaSubject,
+    SimulationLifecycleSubject,
 )
 
 __all__ = [
@@ -24,6 +25,7 @@ __all__ = [
     "LiveSubject",
     "SafetySubject",
     "SagaSubject",
+    "SimulationLifecycleSubject",
     "WORKFLOW_STREAM_NAME",
     "WORKFLOW_STREAM_SUBJECTS",
 ]

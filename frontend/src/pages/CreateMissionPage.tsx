@@ -1,4 +1,16 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  geoOrthographic,
+  geoPath,
+} from "d3-geo";
+
+import { feature } from "topojson-client";
+
+import worldLand from "world-atlas/land-110m.json";
+
+import {
+  useMutation,
+  useQuery,
+} from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRight,
@@ -16,12 +28,17 @@ import {
   Zap
 } from "lucide-react";
 import {
-  useState
+  useMemo,
+  useState,
 } from "react";
 import {
   Link,
   useNavigate,
 } from "react-router-dom";
+import type {
+  GeometryCollection,
+  Topology,
+} from "topojson-specification";
 
 import { createMission } from "../api/missionApi";
 import { getSpacecraft } from "../api/vehicleApi";
@@ -105,6 +122,15 @@ const simulationSpeeds = [
     description: "Rapid simulation",
   },
 ];
+
+type WorldLandTopology =
+  Topology<{
+    land: GeometryCollection;
+  }>;
+
+const WORLD_LAND =
+  worldLand as unknown as
+    WorldLandTopology;
 
 export function CreateMissionPage() {
   const navigate = useNavigate();
@@ -657,6 +683,163 @@ interface FlightStepProps {
   >;
 }
 
+function FlightProfileEarth() {
+  const SIZE = 130;
+  const CENTER = SIZE / 2;
+  const RADIUS = 43;
+
+  const land =
+    useMemo(
+      () =>
+        feature(
+          WORLD_LAND,
+          WORLD_LAND.objects.land,
+        ),
+      [],
+    );
+
+  const projection =
+    useMemo(
+      () =>
+        geoOrthographic()
+          .translate([
+            CENTER,
+            CENTER,
+          ])
+          .scale(RADIUS)
+          .rotate([
+            -12,
+            -12,
+            0,
+          ])
+          .clipAngle(90)
+          .precision(0.5),
+      [CENTER],
+    );
+
+  const landPath =
+    useMemo(
+      () =>
+        geoPath(
+          projection,
+        )(land) ?? "",
+      [
+        projection,
+        land,
+      ],
+    );
+
+  return (
+    <svg
+      className="flight-profile-earth"
+      viewBox={`0 0 ${SIZE} ${SIZE}`}
+      aria-hidden="true"
+    >
+      <defs>
+        <radialGradient
+          id="flight-earth-ocean"
+          cx="32%"
+          cy="27%"
+          r="76%"
+        >
+          <stop
+            offset="0%"
+            stopColor="#183e5b"
+          />
+
+          <stop
+            offset="60%"
+            stopColor="#0a243a"
+          />
+
+          <stop
+            offset="100%"
+            stopColor="#06131f"
+          />
+        </radialGradient>
+
+        <radialGradient
+          id="flight-earth-shadow"
+          cx="26%"
+          cy="22%"
+          r="90%"
+        >
+          <stop
+            offset="45%"
+            stopColor="#020710"
+            stopOpacity="0"
+          />
+
+          <stop
+            offset="78%"
+            stopColor="#020710"
+            stopOpacity="0.42"
+          />
+
+          <stop
+            offset="100%"
+            stopColor="#020710"
+            stopOpacity="0.82"
+          />
+        </radialGradient>
+
+        <clipPath id="flight-earth-clip">
+          <circle
+            cx={CENTER}
+            cy={CENTER}
+            r={RADIUS}
+          />
+        </clipPath>
+      </defs>
+
+      <circle
+        className="flight-profile-earth-halo"
+        cx={CENTER}
+        cy={CENTER}
+        r={RADIUS + 3}
+      />
+
+      <circle
+        className="flight-profile-earth-ocean"
+        cx={CENTER}
+        cy={CENTER}
+        r={RADIUS}
+        fill="url(#flight-earth-ocean)"
+      />
+
+      <g clipPath="url(#flight-earth-clip)">
+        <path
+          className="flight-profile-earth-land"
+          d={landPath}
+        />
+
+        <circle
+          cx={CENTER}
+          cy={CENTER}
+          r={RADIUS}
+          fill="url(#flight-earth-shadow)"
+        />
+      </g>
+
+      <circle
+        className="flight-profile-earth-grid"
+        cx={CENTER}
+        cy={CENTER}
+        r={RADIUS}
+      />
+
+      <path
+        className="flight-profile-equator"
+        d={
+          `M ${CENTER - RADIUS} ${CENTER} ` +
+          `Q ${CENTER} ${CENTER + 13} ` +
+          `${CENTER + RADIUS} ${CENTER}`
+        }
+      />
+    </svg>
+  );
+}
+
 function FlightStep({
   form,
   setForm,
@@ -784,7 +967,7 @@ function FlightStep({
         <div className="orbit-preview-card">
           <div className="orbit-preview">
             <div className="orbit-preview-earth">
-              <span>EARTH</span>
+              <FlightProfileEarth />
             </div>
 
             <div className="orbit-preview-ring">

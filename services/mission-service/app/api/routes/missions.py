@@ -16,6 +16,7 @@ from app.schemas.preparation import (
     SagaStepResponse,
 )
 from app.services.abort_workflow import AbortWorkflowService
+from app.services.launch_workflow import LaunchWorkflowService
 from app.services.mission_service import MissionService
 from app.services.prepare_mission_saga import PrepareMissionSagaService
 from app.services.saga_step_service import SagaStepService
@@ -72,9 +73,20 @@ async def prepare_mission(
     return MissionResponse.model_validate(mission)
 
 
-@router.post("/{mission_id}/launch", response_model=MissionResponse)
-async def launch_mission(mission_id: UUID, session: SessionDependency) -> MissionResponse:
-    mission = await MissionService(session).launch(mission_id)
+@router.post(
+    "/{mission_id}/launch",
+    response_model=MissionResponse,
+)
+async def launch_mission(
+    mission_id: UUID,
+    session: SessionDependency,
+    publisher: PublisherDependency,
+) -> MissionResponse:
+    mission = await LaunchWorkflowService(
+        MissionService(session),
+        publisher,
+    ).launch(mission_id)
+
     return MissionResponse.model_validate(mission)
 
 

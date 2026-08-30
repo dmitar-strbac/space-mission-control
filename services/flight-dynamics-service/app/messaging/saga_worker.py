@@ -17,6 +17,7 @@ from app.schemas.simulation import (
     StateVectorSchema,
 )
 from app.services.idempotency_service import IdempotencyService
+from app.services.simulation_runtime import simulation_runtime_manager
 from app.services.simulation_service import SimulationService
 
 settings = get_settings()
@@ -189,6 +190,15 @@ async def register_flight_dynamics_saga_worker(
                     mission,
                     "oxygen_consumption_rate_kg_s",
                 ),
+                battery_kwh=float(
+                    resources.get(
+                        "available_energy_kwh",
+                        vehicle.get(
+                            "battery_capacity_kwh",
+                            0.0,
+                        ),
+                    )
+                ),
                 power_consumption_kw=_float_value(
                     mission,
                     "power_consumption_kw",
@@ -237,6 +247,10 @@ async def register_flight_dynamics_saga_worker(
         mission_id = _require_uuid(
             envelope.payload,
             "mission_id",
+        )
+
+        await simulation_runtime_manager.stop(
+            mission_id,
         )
 
         async with SessionFactory() as session:
